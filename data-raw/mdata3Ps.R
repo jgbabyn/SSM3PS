@@ -11,7 +11,7 @@ possible.years = factor(possible.years)
 
 cnames = c('Year','landings')
 landings = read.table(file='landings.dat',header=FALSE,col.names=cnames)
-landings$Year = factor(landings$Year,levels=levels(possible.years))
+#landings$Year = factor(landings$Year,levels=levels(possible.years))
 
 cnames = c('Year',paste0('Age',1:16))
 RV_IO.matrix = read.table(file="RV_IO.dat",header=FALSE,col.names=cnames)
@@ -19,7 +19,8 @@ RV_IO.matrix$Year = as.character(RV_IO.matrix$Year)
 yfs = do.call(rbind,strsplit(RV_IO.matrix$Year,"\\."))
 RV_IO.matrix$Year = yfs[,1]
 RV_IO.matrix$fs = as.numeric(yfs[,2])/10
-RV_IO.matrix$Year = factor(RV_IO.matrix$Year,levels=levels(possible.years))
+#RV_IO.matrix$Year = factor(RV_IO.matrix$Year,levels=levels(possible.years))
+RV_IO.matrix$Year = as.numeric(RV_IO.matrix$Year)
 
 cnames = c('Year',paste0('Age',1:16))
 RV_OFF.matrix = read.table(file="RV_OFF.dat",header=FALSE,col.names=cnames)
@@ -27,38 +28,43 @@ RV_OFF.matrix$Year = as.character(RV_OFF.matrix$Year)
 yfs = do.call(rbind,strsplit(RV_OFF.matrix$Year,"\\."))
 RV_OFF.matrix$Year = yfs[,1]
 RV_OFF.matrix$fs = as.numeric(yfs[,2])/10
-RV_OFF.matrix$Year = factor(RV_OFF.matrix$Year,levels=levels(possible.years))
+##RV_OFF.matrix$Year = factor(RV_OFF.matrix$Year,levels=levels(possible.years))
+RV_OFF.matrix$Year = as.numeric(RV_OFF.matrix$Year)
 
 cnames = c('Year',paste0('Age',1:16))
 mat = read.table(file="mat.txt",header=FALSE,col.names=cnames)
-mat$Year = factor(mat$Year,levels=levels(possible.years))
+#mat$Year = factor(mat$Year,levels=levels(possible.years))
 
 midy_wt = read.table(file='midy_wt.dat',header=TRUE)
-midy_wt$Year = factor(midy_wt$Year,levels=levels(possible.years))
+##midy_wt$Year = factor(midy_wt$Year,levels=levels(possible.years))
 
 stock_wt = read.table(file='stock_wt.dat',header=TRUE)
-stock_wt$Year = factor(stock_wt$Year,levels=levels(possible.years))
+#stock_wt$Year = factor(stock_wt$Year,levels=levels(possible.years))
 
 cnames = c('Year',paste0('Age',2:16))
 catch = read.table(file='catch.dat',header=FALSE,col.names=cnames)
-catch$Year = factor(catch$Year,levels=levels(possible.years))
+#catch$Year = factor(catch$Year,levels=levels(possible.years))
 
 used.years = midy_wt$Year
 
-RV1 <- tidyr::gather(RV_OFF.matrix,key="Age",value="index",Age1:Age16)
-RV1$Age = as.numeric(gsub("Age","",RV1$Age))
-RV1$survey = "RV Offshore"
-RV2 <- tidyr::gather(RV_IO.matrix,key="Age",value="index",Age1:Age16)
-RV2$Age = as.numeric(gsub("Age","",RV2$Age))
-RV2$survey = "RV Inshore+Offshore"
-indices = rbind(RV1,RV2)
-indices$survey = factor(indices$survey)
+## RV1 <- tidyr::gather(RV_OFF.matrix,key="Age",value="index",Age1:Age16)
+## RV1$Age = as.numeric(gsub("Age","",RV1$Age))
+## RV1$survey = "RV Offshore"
+## RV2 <- tidyr::gather(RV_IO.matrix,key="Age",value="index",Age1:Age16)
+## RV2$Age = as.numeric(gsub("Age","",RV2$Age))
+## RV2$survey = "RV Inshore+Offshore"
+## indices = rbind(RV1,RV2)
+## indices$survey = factor(indices$survey)
 
-mat.vec <- tidyr::gather(mat,key="Age",value="maturity",Age1:Age16)
-mat.vec$Age = as.numeric(gsub("Age","",mat.vec$Age))
+## mat.vec <- tidyr::gather(mat,key="Age",value="maturity",Age1:Age16)
+## mat.vec$Age = as.numeric(gsub("Age","",mat.vec$Age))
 
-catch.vec <- tidyr::gather(catch,key="Age",value="index",Age2:Age16)
-catch.vec$Age = as.numeric(gsub("Age","",catch.vec$Age))
+## catch.vec <- tidyr::gather(catch,key="Age",value="index",Age2:Age16)
+## catch.vec$Age = as.numeric(gsub("Age","",catch.vec$Age))
+
+
+surveys = list(RVOff = RV_OFF.matrix,RVInOff = RV_IO.matrix)
+catch = list(catch = catch)
 
 ##I just can't
 
