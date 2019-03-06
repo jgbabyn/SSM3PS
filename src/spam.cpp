@@ -36,7 +36,7 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR(idx);
 
   //Blank keys created by keyGen 
-  DATA_IVECTOR(keyF);
+  DATA_IMATRIX(keyF);
   DATA_IMATRIX(keyQ);
   DATA_IMATRIX(keySD);
 
@@ -64,17 +64,15 @@ Type objective_function<Type>::operator() ()
 
   vector<Type> ssb = ssbCalc(logN,stock_wt,mat);
   vector<Type> tsb = tsbCalc(logN,stock_wt);
-  
+
   Type nll = 0.0;
 
-  matrix<Type> logFF(logN.rows(),logN.cols());
-  for(int y = 0; y < logN.rows();y++){
-    for(int a = 0; a < logN.cols();a++){
+  matrix<Type> logFF(logF.rows(),logF.cols());
+  for(int y = 0; y < logF.rows();y++){
+    for(int a = 0; a < logF.cols();a++){
       logFF(y,a) = logF(y,keyF(a));
     }
   }
-  REPORT(logFF);
-
   
   //Recruitment
   Type sdRec = exp(logSDrec);
@@ -87,15 +85,15 @@ Type objective_function<Type>::operator() ()
       break;
     case ricker:
       {
-  	PARAMETER_VECTOR(rickpar);
-  	predN = rickpar(0)+log(ssb(y))-exp(rickpar(1))*ssb(y);
-  	break;
+	PARAMETER_VECTOR(rickpar);
+	predN = rickpar(0)+log(ssb(y))-exp(rickpar(1))*ssb(y);
+	break;
       }
     case beverton:
       {
-  	PARAMETER_VECTOR(bhpar);
-  	predN = bhpar(0)+log(ssb(y))-log(1.0+exp(bhpar(1))*ssb(y));
-  	break;
+	PARAMETER_VECTOR(bhpar);
+	predN = bhpar(0)+log(ssb(y))-log(1.0+exp(bhpar(1))*ssb(y));
+	break;
       }
     default:
       error("Stock recruitment type not implemented");
@@ -109,9 +107,9 @@ Type objective_function<Type>::operator() ()
     for(int a = 1; a < logN.cols();a++){
       predN = logN(y-1,a-1)-exp(logFF(y-1,a-1))-M(y-1,a-1);
       if(a==(logN.cols()-1)){
-      	if(plusGroup == true){
-      	  predN = log(exp(predN) + exp(logN(y-1,a)-exp(logFF(y-1,a))-M(y-1,a)));
-      	}
+	if(plusGroup == true){
+	  predN = log(exp(predN) + exp(logN(y-1,a)-exp(logFF(y-1,a))-M(y-1,a)));
+	}
       }
       nll -= dnorm(logN(y,a),predN,sdSur,true);
     }
@@ -123,24 +121,22 @@ Type objective_function<Type>::operator() ()
   for(int y = 1; y < logF.rows(); y++){
     nll += nldens(logF.row(y)-logF.row(y-1));
   }
-    
+
   //observation equations
   vector<Type> logPred(obs.size());
-  matrix<Type> ECW(logN.rows(),logN.cols());
+  matrix<Type> ECW(logF.rows(),logF.cols());
   Type Z;
   for(int i = 0; i < obs.size(); i++){
-     int y = aux(i,0)-minYear;
-     int a = aux(i,1);
-     int f = aux(i,2)-1;
-     int fType = fleetTypes(f);
+    int y = aux(i,0)-minYear;
+    int a = aux(i,1)-minAge;
+    int f = aux(i,2)-1;
+    int fType = fleetTypes(f);
 
-     if(!isNAINT(a)){
-       a = aux(i,1)-minAge;  //Very much very important to be here!    
-       Z=exp(logFF(y,a))+M(y,a);
-     }else{
-       Z=0;
-     }
-
+    if(!isNAINT(a)){
+      Z=exp(logFF(y,a))+M(y,a);
+    }else{
+      Z=0;
+    }
     switch(fType){
     case Catch:
       logPred(i) = logN(y,a)-log(Z)+log(1-exp(-Z))+logFF(y,a);
@@ -166,16 +162,16 @@ Type objective_function<Type>::operator() ()
 
        switch(fType){
        case Catch:
-  	 nll -= dnorm(log(obs(i)),logPred(i),obsSD(keySD(f,a)),true);
-  	 break;
+	 nll -= dnorm(log(obs(i)),logPred(i),obsSD(keySD(f,a)),true);
+	 break;
        case survey:
-  	 nll -= dnorm(log(obs(i)),logPred(i),obsSD(keySD(f,a)),true);
-  	 break;
+	 nll -= dnorm(log(obs(i)),logPred(i),obsSD(keySD(f,a)),true);
+	 break;
        case landings:
-  	 break; //Do nothing with landings for now
+	 break; //Do nothing with landings for now
        default:
-  	 error("How did you get down here?");
-  	   break;
+	 error("How did you get down here?");
+	   break;
        }
        
   }

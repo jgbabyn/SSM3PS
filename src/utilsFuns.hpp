@@ -30,7 +30,3 @@ bool isNA(Type x){
 bool isNAINT(int x){
   return NA_INTEGER==x;
 }
-
-bool isNaInt(int x){
-  return R_NaInt == x;
-}
