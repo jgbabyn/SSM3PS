@@ -1,9 +1,13 @@
 #install.packages("reshape2")
-require(reshape2) 
+##install.packages('lubridate')
+require(reshape2)
 library(stringr)
+library(lubridate)
 
 assess.year = 1959:2016
 
+##Maybe use relative paths if at all...? Also can use / on Windows too 
+##setwd("./data_EDA") 
 setwd("C:\\Users\\mroberts\\OneDrive - Memorial University of Newfoundland\\Marine Institute\\Classes\\FISH_6005\\Project 1\\Project 1\\data_EDA")
 
 cnames = c('Year','landings')
@@ -28,6 +32,10 @@ OFF.mean<-apply(OFF.ages, 2, mean, na.rm=TRUE)
 OFF.old<-OFF.ages[-c(21,22),]
 OFF.mean.old<-apply(OFF.old,2, mean, na.rm=TRUE)
 
+cnames = c('Year','MedDate',paste0('Age',1:16))
+geac <- read.csv(file="geac.csv",header=TRUE,col.names=cnames)
+geac$fs <- lubridate::month(as.Date(geac$MedDate))/12 ##Yeah I know...
+
 ratio<-IO.mean.old/OFF.mean.old
 
 both_RV<-read.table("combined_RV.txt")
@@ -43,6 +51,7 @@ catch<-catch[,c(1:14)]
 
 cnames = c('Year',paste('Age',0:15,sep=""))
 mat.all = read.table(file='mat.txt',header=FALSE,col.names=cnames)
+
 
 #doesnt go all the way back to 1959, for now will use median weights as historical extrapolation
 wt.all = read.table(file='stock_wt.dat',header=TRUE)
