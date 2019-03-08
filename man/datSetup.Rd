@@ -6,7 +6,7 @@
 \usage{
 datSetup(surveys, catch, landings, stock_wt, midy_wt, mat, M = 0.2,
   ages = NULL, years = NULL, plusGroup = NULL, idetect = 5e-04,
-  cdetect = 5e-04, match3NOdims = TRUE)
+  cdetect = 5e-04, match3NOdims = TRUE, naz.rm = TRUE)
 }
 \arguments{
 \item{surveys}{named list of surveys to include}
@@ -32,6 +32,8 @@ datSetup(surveys, catch, landings, stock_wt, midy_wt, mat, M = 0.2,
 \item{cdetect}{The catch dectection limit}
 
 \item{match3NOdims}{remove final row from C,C_zero,landings}
+
+\item{naz.rm}{replaces NAs and zeros with dectection limits}
 
 \item{recType}{recruitment option}
 }
