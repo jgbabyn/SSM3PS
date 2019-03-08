@@ -1,24 +1,29 @@
 #include <TMB.hpp>
 #include "pnorm4.hpp"
 
-//The Marie Kondo version
+//Simplifed, in my opinion more readable, added stable versions of pnorm...
 
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
+  enum censorType {
+    noCensor = 0,
+    basic = 1,
+    stable = 2,
+    bounds = 3 //Not implemented yet
+  };
+    
   
   // input data;  
   DATA_MATRIX(M);
   DATA_MATRIX(weight); 
   DATA_MATRIX(mat); 
   DATA_MATRIX(midy_weight);
-  DATA_MATRIX(C);
+  DATA_MATRIX(C);         
   DATA_VECTOR(landings); 
   DATA_VECTOR(index);
-  //DATA_IVECTOR(i_zero); //I reallly feel this two could just be replaced by a couple checks
-  //DATA_IMATRIX(C_zero); //Well let's tidy up then! 
-  DATA_SCALAR(i_detect); //The dection limit of the survey
-  DATA_SCALAR(c_detect); //catch detection limit 
+  DATA_IVECTOR(i_zero); 
+  DATA_IMATRIX(C_zero);  
   DATA_IVECTOR(iyear);
   DATA_IVECTOR(iage);
   DATA_IVECTOR(isurvey); 
@@ -27,18 +32,19 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(index_censor); 
   DATA_INTEGER(catch_censor); 
   DATA_INTEGER(use_pe);        
-  DATA_INTEGER(use_cye); 
-
-  //Let's reduced the risk of bombing by cleaning up a bit?
-  int n = index.size();
-  int A = M.cols();
-  int Y = M.rows();
-  matrix<Type> log_C = C.array().log();
-  vector<Type> log_landings = landings.log();
-  vector<Type> log_index = index.log();
+  DATA_INTEGER(use_cye);
+  //DATA_SCALAR(i_detect); //Why read a vector, when a single value will do?
+  //DATA_SCALAR(c_detect);
   
+  int n = index.size();  
   Type one = 1.0;
   Type zero = 0.0;
+  
+  int A = mat.cols();
+  int Y = mat.rows();
+  matrix<Type> log_C = C.array().log(); //we can do this in a line inside too
+  vector<Type> log_landings = log(landings);
+  vector<Type> log_index = log(index);
   
   //define parameters;  
   PARAMETER_VECTOR(log_No);  
@@ -127,12 +133,12 @@ Type objective_function<Type>::operator() ()
   
   for(int y = 1;y < Y;++y){
     log_N(y,0) = log_Rec(y);  
-    for(int a = 1; a < A;++a){
+    for(int a = 1;a < A;++a){
       log_N(y,a) = log_N(y-1,a-1) - Z(y-1,a-1) + std_pe*pe(y,a);
     }
   }
-  //Clean up an entire for loop!
   N = log_N.array().exp();
+  
   B_matrix = weight.array()*N.array();
   SSB_matrix = mat.array()*B_matrix.array(); 
   
@@ -168,31 +174,65 @@ Type objective_function<Type>::operator() ()
   // Catch at age nll;
   
   for(int y = 0;y < Y-1;++y){
-    for(int a = 0;a < A;++a){          
-      if(catch_censor==0){
+    for(int a = 0;a < A;++a){
+      if(C_zero(y,a) == 1){
+	switch(catch_censor){
+	case noCensor:
+	  nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
+	  break;
+	case basic:
+	  nll -= log(pnorm(std_C_resid(y,a)));
+	  break;
+	case stable:
+	  nll -= pnorm4(std_C_resid(y,a));
+	  break;
+	default:
+	  error("catch_censor type not implemented");
+	  break;
+	}
+      }
+      else{
 	nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
       }
-      if(catch_censor==1){  
-        if(C(y,a) >= c_detect){
-	  nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
-	}
-        else{
-	  nll -= pnorm4(std_C_resid(y,a));
-	}
-      } 
+	
+      // if(catch_censor==0){
+      // 	nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
+      // }
+      // if(catch_censor==1){  
+      //   if(C_zero(y,a)==0){
+      // 	  nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
+      // 	}
+      //   if(C_zero(y,a)==1){
+      // 	  nll -= log(pnorm(std_C_resid(y,a)));
+      // 	}
+      // } 
     }
   }
   
   // Index nll;
   
   for(int i = 0;i < n;++i){   
-    if(index(i) >= i_detect){
-      if(index_censor==0){
+    if(i_zero(i) == 1){
+      switch(index_censor){
+      case noCensor:
 	nll -= dnorm(resid_index(i),zero,std_index_vec(i),true);
-      }       
-      if(index_censor==1){
+	break;
+      case basic:
+	nll -= log(pnorm(std_resid_index(i)));
+	break;
+      case stable:
 	nll -= pnorm4(std_resid_index(i));
-      } 
+	break;
+      default:
+	error("Invalid index_censor type");
+	break;
+      }	
+      // if(index_censor==0){
+      // 	nll -= dnorm(resid_index(i),zero,std_index_vec(i),true);
+      // }       
+      // if(index_censor==1){
+      // 	nll -= log(pnorm(std_resid_index(i)));
+      // }
     }      
     else{
       nll -= dnorm(resid_index(i),zero,std_index_vec(i),true);
@@ -218,9 +258,7 @@ Type objective_function<Type>::operator() ()
   nll += SEPARABLE(AR1(ar_logF_age),AR1(ar_logF_year))(log_F1);
   
   //pe nll
-  if(use_pe==1){
-    nll += SEPARABLE(AR1(ar_pe_age),AR1(ar_pe_year))(pe);
-  }
+  if(use_pe==1){nll += SEPARABLE(AR1(ar_pe_age),AR1(ar_pe_year))(pe);}
   
   //year effect nll;
   if(use_cye==1){
@@ -245,24 +283,22 @@ Type objective_function<Type>::operator() ()
   //pop size weighted ave F;  
   
   Type tni;
-
-  int i,j;
-  //average F 4-6 and 6-9 WHY INSIDE
-  for(i = 0;i < Y-1;++i){
-    aveF_46(i) = zero; 
+  
+  for(int y = 0;y < Y-1;++y){
+    aveF_46(y) = zero; 
     tni = zero;
-    for(j = 2;j < 4;++j){
-      aveF_46(i) += F(i,j)*N(i,j); 
-      tni += N(i,j);
+    for(int a = 2;a < 4;++a){
+      aveF_46(y) += F(y,a)*N(y,a); 
+      tni += N(y,a);
     }
-    aveF_46(i) = aveF_46(i)/tni;  
-    aveF_69(i) = zero; 
+    aveF_46(y) = aveF_46(y)/tni;  
+    aveF_69(y) = zero; 
     tni = zero;
-    for(j = 4;j < 7;++j){
-      aveF_69(i) += F(i,j)*N(i,j); 
-      tni += N(i,j);
+    for(int a = 4;a < 7;++a){
+      aveF_69(y) += F(y,a)*N(y,a); 
+      tni += N(y,a);
     }
-    aveF_69(i) = aveF_69(i)/tni;
+    aveF_69(y) = aveF_69(y)/tni;
   }
   
   log_aveF_46 = log(aveF_46); 

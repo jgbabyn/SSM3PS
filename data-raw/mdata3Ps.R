@@ -1,7 +1,4 @@
-##Shouldn't be any real reason to run this...
-##This is also just the kludgest cheapest things I could do to get it to run
-##I only use 1982 onwards and ages 
-
+library(tidyverse)
 ##Reading this all in again so I have the bloody years...
 
 setwd("~/Documents/GitHub/SSM3PS/data-raw/data_EDA")
@@ -10,7 +7,10 @@ possible.years = 1954:2019
 possible.years = factor(possible.years)
 
 cnames = c('Year','landings')
-landings = read.table(file='landings.dat',header=FALSE,col.names=cnames)
+##Correction for double years pointed out by Matt
+landings = read.table(file='landings.dat',header=FALSE,col.names=cnames) %>%
+    group_by(Year) %>%
+    summarize(landings=sum(landings))
 #landings$Year = factor(landings$Year,levels=levels(possible.years))
 
 cnames = c('Year',paste0('Age',1:16))

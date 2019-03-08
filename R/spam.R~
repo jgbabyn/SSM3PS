@@ -16,14 +16,19 @@
 #'
 #' @export
 #'
-spamSetup <- function(surveys,catch,landings,keys,stock_wt,midy_wt,mat,recType=0,corrFFlag=0,M,years=NULL,plusGroup=NULL){
-    obs <- obsSetup(surveys,catch,landings,plusGroup,years=years)
+spamSetup <- function(surveys,catch,landings,keys,stock_wt,midy_wt,mat,recType=0,corrFFlag=0,M,years=NULL,ages=NULL,plusGroup=NULL){
+    obs <- obsSetup(surveys,catch,landings,plusGroup,years=years,ages=ages)
 
     if(missing(years))
         years = sort(unique(obs$aux[,1]))
 
-    ages = sort(unique(obs$aux[,2]))
+    if(missing(ages))
+        ages = sort(unique(obs$aux[,2]))
 
+    if(!is.null(plusGroup)){
+        ages = min(ages):plusGroup
+    }
+    
     
 
     Mmat = matrix(M,nrow=length(years),ncol=length(ages))
@@ -77,7 +82,7 @@ spamSetup <- function(surveys,catch,landings,keys,stock_wt,midy_wt,mat,recType=0
 #' @param landings landings statistics
 #' @param plusGroup Form a plus group at some year?
 #'
-obsSetup <- function(surveys,catch,landings,plusGroup,years){
+obsSetup <- function(surveys,catch,landings,plusGroup,years,ages){
     ##Converting data to vector form
 
     surVec <- lapply(seq_along(surveys),function(x,nam,i){
@@ -109,7 +114,7 @@ obsSetup <- function(surveys,catch,landings,plusGroup,years){
 
     ##Plus group summarization
     ##Is weighted mean doing what I think it is doing? Yes
-    if(!missing(plusGroup)){
+    if(!is.null(plusGroup)){
         obs$pg = FALSE
         obs <- dplyr::mutate(obs,Age = ifelse(Age > plusGroup,plusGroup,Age))
         obs <- dplyr::group_by(obs,Year,Age,fs,fleet,survey)
@@ -124,6 +129,9 @@ obsSetup <- function(surveys,catch,landings,plusGroup,years){
 
     if(!is.null(years))
         obs <- obs[obs$Year %in% years,]
+
+    if(!is.null(ages))
+        obs <- obs[obs$Age %in% ages,]
     
     ret <- list()
     ret$obs <- obs$index

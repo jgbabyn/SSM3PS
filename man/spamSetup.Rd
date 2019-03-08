@@ -5,7 +5,8 @@
 \title{Setup data for SPAM model}
 \usage{
 spamSetup(surveys, catch, landings, keys, stock_wt, midy_wt, mat,
-  recType = 0, corrFFlag = 0, M, years, plusGroup = NULL)
+  recType = 0, corrFFlag = 0, M, years = NULL, ages = NULL,
+  plusGroup = NULL)
 }
 \arguments{
 \item{surveys}{named list of surveys to include}
@@ -24,9 +25,9 @@ spamSetup(surveys, catch, landings, keys, stock_wt, midy_wt, mat,
 
 \item{years}{optional vector of years to include}
 
-\item{plusGroup}{optional age to specify as a plus group, indices are summed by that age and weights taken to be the weighted mean of ages in plus group by index}
-
 \item{ages}{optional vector of ages to include, if using plus group, keep ages above plusGroup in vector}
+
+\item{plusGroup}{optional age to specify as a plus group, indices are summed by that age and weights taken to be the weighted mean of ages in plus group by index}
 }
 \description{
 Constructs data and parameters to be usable by SPAM.

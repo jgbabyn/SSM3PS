@@ -4,7 +4,7 @@
 \alias{obsSetup}
 \title{Setup observation vector, aux stuff and idx}
 \usage{
-obsSetup(surveys, catch, landings, plusGroup)
+obsSetup(surveys, catch, landings, plusGroup, years, ages)
 }
 \arguments{
 \item{surveys}{list of survey fleets}
