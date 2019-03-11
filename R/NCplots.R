@@ -44,3 +44,49 @@ tsCIplot <- function(sName,sd.rep,years,alpha=0.05,exp=FALSE,add=FALSE,color="bl
 }
 
 
+#'bubble plot of residuals
+#'
+#'Bubble plots of the residuals using either oneStepPredict residuals or not
+#'
+#' @param rep the report object of the fit
+#' @param indices the indices data frame used in the data
+#' @param oneStep optional oneStepPredict residuals
+#'
+#' @export
+bubblePlot <- function(rep,indices,oneStep=NULL,pch=21){
+    dat = data.frame(Age = indices$Age, Year = indices$Year,
+                     Cohort = indices$Year-indices$Age,
+                     survey = indices$survey,
+                     pred = rep$Elog_index,
+                     index = indices$index,
+                     log_index = log(indices$index),
+                     resid = rep$resid_index,
+                     resid_std = rep$std_resid_index)
+
+    if(!is.null(oneStep)){
+        dat$resid_std = oneStep$residual
+    }
+    
+    dat$colr = "deepskyblue"
+    dat$colr[dat$resid >0]='firebrick2'
+    dat$pch = pch
+    dat$colr[(indices$i_zero==1)&(dat$resid>0)]='azure2'
+    dat$colr[(indices$i_zero==1)&(dat$resid<=0)]='dimgray'
+
+    jDarkGray <- 'grey20'
+    pRet = xyplot(factor(Age) ~ Year | survey,data=dat,
+                  ylab="Age",main="Residuals",
+                  cex = 1.5*sqrt(abs(dat$resid_std)/pi),fill.color=dat$colr,
+                  col=jDarkGray,
+                  par.strip.text=list(cex=0.5),
+                  panel=function(x,y,...,cex,fill.color,pch,subscripts){
+                      panel.abline(v=seq(min(dat$Year),max(dat$Year),by=5),
+                                   col.line=grey(0.9))
+                      panel.xyplot(x,y,cex=cex[subscripts],
+                                   pch=dat$pch,fill=fill.color[subscripts],...)
+                  })
+    pRet
+}
+
+    
+

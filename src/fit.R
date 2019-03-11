@@ -19,7 +19,7 @@ surveys = list(RVOff = surveys$RVOff,catch = surveys$catch)
 dat <- datSetup(surveys,catch,landings,stock_wt,midy_wt,mat,
                 age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE,match3NOdims=FALSE)
 
-
+indd <- dat$indices
 ##param <- paramSetup(dat)
 param <- dat$param
 
@@ -53,10 +53,13 @@ dat$index_censor = 0
 dat$catch_censor = 0
 obj <- MakeADFun(dat,param$param,random=c("log_Rec_dev","log_F","pe"),DLL="fit",map=mapN)
 
+
+
 ff <- obj$gr(obj$par)
 names(ff) <- names(obj$par)
 
 
 opt <- nlminb(obj$par,obj$fn,obj$gr,control=list(iter.max=500,eval.max=500))
 
-oneStepPredict(obj,"log_index","keep",discrete=FALSE)
+osp <- oneStepPredict(obj,"log_index","keep",discrete=FALSE)
+rep2 <- obj$report()
