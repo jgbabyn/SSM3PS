@@ -33,9 +33,9 @@ ind = mapq %in% c(paste("OFF:",agep,sep=''),paste("IO:",agep,sep=''))
 
 mapq[ind] = paste("OFF:",rep('6+',9),sep='')
 
-
+param$param$log_qparm <- log(c(0.1,0.3,0.7,1,1,1,1,1,1,1,1,1,1))
 mapN = list( 
-  log_qparm = factor(mapq),
+  log_qparm = factor(rep(NA,length(mapq))),
   log_std_logF = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
   log_std_log_C = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),          
   logit_ar_logF_age = factor(NA),              
@@ -49,8 +49,8 @@ mapN = list(
   cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))) 
 )
 
-dat$index_censor = 2
-dat$catch_censor = 2
+dat$index_censor = 0
+dat$catch_censor = 0
 obj <- MakeADFun(dat,param$param,random=c("log_Rec_dev","log_F","pe"),DLL="fit",map=mapN)
 
 ff <- obj$gr(obj$par)

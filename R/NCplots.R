@@ -1,52 +1,46 @@
-
-noel.padding <- function(){
-    my.padding <- list(layout.heights = list( 
-                        top.padding = 0, 
-                        main.key.padding = 1, 
-                        key.axis.padding = 0, 
-                        axis.xlab.padding = 0, 
-                        xlab.key.padding = 0, 
-                        key.sub.padding = 0), 
-                layout.widths = list( 
-                        left.padding = 1,
-                        key.ylab.padding = 0, 
-                        ylab.axis.padding = 1, 
-                        axis.key.padding = 0, 
-                        right.padding = 1) 
-                )
-    my.padding
-}
-
-
-#'Spay plot of model fit
+#'Plot line graph with confidence interval from sd.report object
 #'
-#' @param rep the report object containing the residuals
-#' @param indices the indices data object containing the indices setup data
-#' @param type residuals for survey or catch at age
-#' 
+#' Given a name of something in an sd.report object and the number of corresponding
+#' years, plot the time series and the corresponding confidence intervals and return a ggplot object
+#'
+#' @param sName the name of the series to plot
+#' @param sd.rep the sd.report object
+#' @param years vector of corresponding years
+#' @param alpha alpha value for confidence intervals
+#' @param exp take the exponent of the value?
+#' @param add return a list of gproto objects to add together plots?
+#' @param color the color of the line
+#' @param fcolor the color of the confidence interval
+#'
 #' @export
-spayPlot <- function(rep,indices,type="survey"){
-    resdat = data.frame(resid=rep$resid_index,resid_std=rep$std_resid_index,
-                        Age = indices$Age,Year=indices$Year,Cohort=indices$Year-indices$Age,survey=indices$survey,
-                        pred=rep$Elog_index,index=indices$index,log_index=log(indices$index))
+#'
+tsCIplot <- function(sName,sd.rep,years,alpha=0.05,exp=FALSE,add=FALSE,color="black",fcolor="grey70"){
+    crit = qnorm(alpha/2,lower.tail=FALSE)
 
-    resdat$colr = 'deepskyblue'
-    resdat$colr[resdat$resid > 0] = 'firebrick2'
-    resdat$pch=21
-    resdat$colr[(indices$i_zero==1)&(resdat$resid>0)]='azure2'
-    resdat$colr[(indices$i_zero==1)&(resdat$resid<=0)] = 'dimgray'
+    ind = names(sd.rep$value) == sName
+    stdi = sd.rep$sd[ind]
+    if(exp == TRUE){
+        low = exp(sd.rep$value[ind] - crit*stdi)
+        val = exp(sd.rep$value[ind])
+        high = exp(sd.rep$value[ind] + crit*stdi)
+    }else{
+        low = sd.rep$value[ind] - crit*stdi
+        val = sd.rep$value[ind]
+        high = sd.rep$value[ind] + crit*stdi
+    }
+    dat = data.frame(val=val,year=years,high=high,low=low)
 
-    my.padding <- noel.padding()
-    my.padding$layout.heights$main.key.padding = 0
+    pRet = ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x=year,y=val),dat,color=color) +
+        ggplot2::geom_ribbon(ggplot2::aes(x=year,ymin=low,ymax=high),dat,fill=fcolor,alpha=0.3)
 
-    jDarkGray <- 'grey20'
-    jPch <- 21
-    residPlot = lattice::xyplot(factor(Age)~Year|survey,data=resdat,
-                                ylab='Age',main='Residuals',
-                                cex= 1.5*sqrt(abs(resdat$resid_std)))
+    if(add==TRUE){
+        pRet = list(line = ggplot2::geom_line(ggplot2::aes(x=year,y=val),dat,color=color),
+                    ribbon = ggplot2::geom_ribbon(ggplot2::aes(x=year,ymin=low,ymax=high),dat,alpha=0.3),fill=fcolor)
+    }
+    
+    
+    
+    pRet
 }
 
-    
-    
 
-    
