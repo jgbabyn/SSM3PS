@@ -23,19 +23,19 @@ keyGen <- function(numAges,numFleets){
 #' @param dat list of data and parameters from spamSetup
 #'
 #'
-#' @useDynLib 'SSM3Ps'
+#' @useDynLib 'SSM3PS'
 #' 
 #' @export
 #'
-spamFit <- function(dat,map=list(),...){
+spamFit <- function(data,parameters,map=list(),control=list(),lower=-Inf,upper=Inf,...){
 
-    obj <- TMB::MakeADFun(dat$data,dat$parm,map=map,random=dat$random,...)
+    obj <- TMB::MakeADFun(data,parameters,map=map,random=dat$random,...)
 
-    opt <- nlminb(obj$par,obj,obj$gr,obj$he)
+    opt <- nlminb(obj$par,obj,obj$gr,control=control,lower=lower,upper=upper)
 
     fit <- list()
 
-    fit$dat <- dat
+    fit$dat <- data
     fit$obj <- obj
     fit$opt <- opt
     fit$rep <- obj$report()
@@ -59,7 +59,7 @@ logLik.spam <- function(object,...)
     val
 }
 
-
+#'Helper function for generating plusGroup information
 pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
         x <- x[x$Age %in% ages,]
         x <- x[x$Year %in% years,]
@@ -221,8 +221,11 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
         use_pe = 0,
         use_cye = 0
     )
-    
-    tmb.data
+
+    dat <- list()
+    dat$data <- tmb.data
+    dat$param <- paramSetup(tmb.data)
+    dat$indices <- surVec
 }
 
 #'Setup parameters
