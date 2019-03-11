@@ -3,6 +3,7 @@
 
 //Simplifed, in my opinion more readable, added stable versions of pnorm...
 
+
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
@@ -12,6 +13,12 @@ Type objective_function<Type>::operator() ()
     stable = 2,
     bounds = 3 //Not implemented yet
   };
+
+  enum fleetType {
+    survey = 0,
+    Catch = 1,
+    land = 2
+  };
     
   
   // input data;  
@@ -19,32 +26,30 @@ Type objective_function<Type>::operator() ()
   DATA_MATRIX(weight); 
   DATA_MATRIX(mat); 
   DATA_MATRIX(midy_weight);
-  DATA_MATRIX(C);         
-  DATA_VECTOR(landings); 
-  DATA_VECTOR(index);
-  DATA_IVECTOR(i_zero); 
-  DATA_IMATRIX(C_zero);  
+  DATA_VECTOR(log_landings); 
+  DATA_VECTOR(log_index);
+  DATA_IVECTOR(i_zero); //A lot of this could be put in one IMATRIX?
   DATA_IVECTOR(iyear);
   DATA_IVECTOR(iage);
-  DATA_IVECTOR(isurvey); 
+  DATA_IVECTOR(isurvey);
   DATA_IVECTOR(iq);
   DATA_VECTOR(fs);
+  DATA_IVECTOR(ft);
   DATA_INTEGER(index_censor); 
-  DATA_INTEGER(catch_censor); 
   DATA_INTEGER(use_pe);        
   DATA_INTEGER(use_cye);
-  //DATA_SCALAR(i_detect); //Why read a vector, when a single value will do?
-  //DATA_SCALAR(c_detect);
   
-  int n = index.size();  
+  DATA_VECTOR_INDICATOR(keep,log_index); //Used for one step predict, does not need to be read in from R
+  
+  
+  int n = log_index.size();  
   Type one = 1.0;
   Type zero = 0.0;
   
   int A = mat.cols();
   int Y = mat.rows();
-  matrix<Type> log_C = C.array().log(); //we can do this in a line inside too
-  vector<Type> log_landings = log(landings);
-  vector<Type> log_index = log(index);
+  vector<Type> landings = exp(log_landings);
+  vector<Type> index = exp(log_index);
   
   //define parameters;  
   PARAMETER_VECTOR(log_No);  
@@ -60,8 +65,9 @@ Type objective_function<Type>::operator() ()
   PARAMETER(logit_ar_pe_year);    
   PARAMETER(logit_ar_pe_age);       
   PARAMETER(logit_ar_cye_year); 
-  PARAMETER_VECTOR(log_std_log_C);             
-  
+  PARAMETER_VECTOR(log_std_log_C);
+
+  //Random Effects
   PARAMETER_VECTOR(log_Rec_dev);   
   PARAMETER_ARRAY(log_F);    
   PARAMETER_ARRAY(pe);      
@@ -96,9 +102,8 @@ Type objective_function<Type>::operator() ()
   vector<Type> Elog_index(n); 
   vector<Type> resid_index(n); 
   vector<Type> std_resid_index(n); 
-  vector<Type> log_q_vec = log_qparm(iq); 
-  vector<Type> std_index_vec = std_index(isurvey);
-  
+  vector<Type> std_index_vec(n);
+   
   //**********  SD report objects ***************;
   
   vector<Type> biomass(Y); 
@@ -142,102 +147,65 @@ Type objective_function<Type>::operator() ()
   B_matrix = weight.array()*N.array();
   SSB_matrix = mat.array()*B_matrix.array(); 
   
-  // Catch model prediction from Baranov;
-  
-  vector<Type> landings_pred(Y);
-  
-  for(int y = 0;y < Y;++y){ 
-    landings_pred(y)=zero;
-    for(int a = 0;a < A;++a){
-      EC(y,a) = N(y,a)*(one - exp(-one*Z(y,a)))*F(y,a)/Z(y,a);
-      ECW(y,a) = EC(y,a)*midy_weight(y,a);
-      log_EC(y,a) = log(EC(y,a));
-      C_resid(y,a) = log_C(y,a) - log_EC(y,a) + cye(y,a);
-      landings_pred(y) += ECW(y,a); 
-      std_C_resid(y,a) = C_resid(y,a)/std_log_C(a);
-    }}
-  vector<Type> log_landings_pred = log(landings_pred);
-  
-  //  Survey index predictions, and residuals;
-  
+  //  Catch, Landings, Survey index predictions,nll, and residuals;
+  //This was done entirely for the sake of oneStepPredict as you need it all in a vector
+  //The easiest way I could think to do this was to prepare the catch data in the same fashion as the survey data
   int ia,iy;
+  vector<Type> landings_pred(Y);
   for(int i = 0;i < n;++i){
+    int fType = ft(i);
     ia = iage(i);
     iy = iyear(i);
-    Elog_index(i) = log_q_vec(i) + log(N(iy,ia)) - fs(i)*Z(iy,ia);
-    resid_index(i) = log_index(i) - Elog_index(i); 
-    std_resid_index(i) = resid_index(i)/std_index_vec(i);
-  }
-  
-  // End of model, now fit functions (nll - negative loglikelihoods);
-  
-  // Catch at age nll;
-  
-  for(int y = 0;y < Y;++y){
-    for(int a = 0;a < A;++a){
-      if(C_zero(y,a) == 1){
-	switch(catch_censor){
-	case noCensor:
-	  nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
-	  break;
-	case basic:
-	  nll -= log(pnorm(std_C_resid(y,a)));
-	  break;
-	case stable:
-	  nll -= pnorm4(std_C_resid(y,a));
-	  break;
-	default:
-	  error("catch_censor type not implemented");
-	  break;
-	}
-      }
-      else{
-	nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
-      }
-	
-      // if(catch_censor==0){
-      // 	nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
-      // }
-      // if(catch_censor==1){  
-      //   if(C_zero(y,a)==0){
-      // 	  nll -= dnorm(C_resid(y,a),zero,std_log_C(a),true);
-      // 	}
-      //   if(C_zero(y,a)==1){
-      // 	  nll -= log(pnorm(std_C_resid(y,a)));
-      // 	}
-      // } 
+
+    //Observation equations
+    switch(fType){
+    case survey:
+      std_index_vec(i) = std_index(isurvey(i));
+      Elog_index(i) = log_qparm(iq(i)) + log_N(iy,ia) - fs(i)*Z(iy,ia);
+      resid_index(i) = log_index(i) - Elog_index(i); 
+      std_resid_index(i) = resid_index(i)/std_index_vec(i);
+      break;
+    case Catch:
+      EC(iy,ia) = N(iy,ia)*(one - exp(-one*Z(iy,ia)))*F(iy,ia)/Z(iy,ia);
+      ECW(iy,ia) = EC(iy,ia)*midy_weight(iy,ia);
+      log_EC(iy,ia) = log(EC(iy,ia));
+      Elog_index(i) = log_EC(iy,ia);
+      resid_index(i) = log_index(i) - log_EC(iy,ia) + cye(iy,ia);
+      landings_pred(iy) += ECW(iy,ia);
+      std_C_resid(iy,ia) = resid_index(i)/std_log_C(ia);
+      std_index_vec(i) = std_log_C(ia);
+      break;
+    case land:
+      break; //Do nothing for now. Must handle landings after catch!
+    default:
+      error("Fleet Type not implemented");
+      break;
     }
-  }
-  
-  // Index nll;
-  
-  for(int i = 0;i < n;++i){   
+
+    //Fit nlls here too since why not?
     if(i_zero(i) == 1){
       switch(index_censor){
       case noCensor:
-	nll -= dnorm(resid_index(i),zero,std_index_vec(i),true);
+	nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
 	break;
       case basic:
-	nll -= log(pnorm(std_resid_index(i)));
+	nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
 	break;
       case stable:
-	nll -= pnorm4(std_resid_index(i));
+	nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
 	break;
       default:
 	error("Invalid index_censor type");
 	break;
-      }	
-      // if(index_censor==0){
-      // 	nll -= dnorm(resid_index(i),zero,std_index_vec(i),true);
-      // }       
-      // if(index_censor==1){
-      // 	nll -= log(pnorm(std_resid_index(i)));
-      // }
+      } 
     }      
     else{
-      nll -= dnorm(resid_index(i),zero,std_index_vec(i),true);
+      nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
     }
+
   }
+  vector<Type> log_landings_pred = log(landings_pred);
+  
   
   //recruitment
   //  nll += SCALE(AR1(phi_logR),std_log_R)(log_Rec_dev);

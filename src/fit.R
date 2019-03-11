@@ -11,7 +11,12 @@ source("../data-raw/mdata3Ps.R")
 #dat <- datSetup(surveys,catch$catch,landings,stock_wt,
 #                midy_wt,mat,ages=3:16,years=1983:2015,plusGroup=12,match3NOdims=TRUE)
 
-dat <- datSetup(surveys[-2],catch$catch,landings,stock_wt,midy_wt,mat,
+catch = catch$catch
+catch$fs = NA
+
+surveys$catch = catch
+surveys = list(RVOff = surveys$RVOff,catch = surveys$catch)
+dat <- datSetup(surveys,catch,landings,stock_wt,midy_wt,mat,
                 age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE,match3NOdims=FALSE)
 
 
@@ -41,13 +46,17 @@ mapN = list(
   pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
   log_std_cye=factor(NA),  
   logit_ar_cye_year = factor(NA),  
-  cye=factor(matrix(NA,nrow=nrow(dat$C),ncol=ncol(dat$C))) 
+  cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))) 
 )
 
 dat$index_censor = 2
 dat$catch_censor = 2
 obj <- MakeADFun(dat,param$param,random=c("log_Rec_dev","log_F","pe"),DLL="fit",map=mapN)
 
-obj$gr(obj$par)
+ff <- obj$gr(obj$par)
+names(ff) <- names(obj$par)
+
 
 opt <- nlminb(obj$par,obj$fn,obj$gr,control=list(iter.max=500,eval.max=500))
+
+oneStepPredict(obj,"log_index","keep",discrete=FALSE)

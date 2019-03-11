@@ -169,7 +169,14 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
     surVec$iyear <- surVec$Year -min(years)
     surVec$i_zero <- ifelse(surVec$index < idetect | is.na(surVec$index),1L,0L)
     surVec$qname <- paste0(surVec$survey,":",stringr::str_pad(surVec$Age,2,pad="0",))
+    surVec$qname <- ifelse(surVec$survey == "catch" | surVec$survey == "landings",NA,surVec$qname)
     surVec$iq <- as.numeric(factor(surVec$qname,levels=sort(unique(surVec$qname))))-1
+    surVec$ft <- dplyr::case_when(surVec$survey == "catch" ~ 1L,
+                                  surVec$survey == "landings" ~ 2L,
+                                  TRUE ~ 0L) ##Otherwise it's a survey
+    surVec$isurvey <- ifelse(surVec$survey == "catch" | surVec$survey == "landings",NA,surVec$survey)
+    surVec$isurvey <- as.numeric(factor(surVec$isurvey))-1
+    
 
     ##Setup for the plus group...
     matVec <- vMake(mat)
@@ -190,12 +197,9 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
         landings = landings[-nrow(landings),]
         surVec = surVec[surVec$iyear < max(surVec$iyear),]
     }
-    C_zero =  matrix(ifelse(pCatch < cdetect | is.na(pCatch),1,0),nrow=nrow(pCatch),ncol=ncol(pCatch))
 
     if(naz.rm==TRUE){
-        pCatch[is.na(pCatch)] = 0
         surVec$index[is.na(surVec$index)] = 0
-        pCatch[pCatch < cdetect] =cdetect
         surVec$index[surVec$index < idetect] = idetect
         }
         
@@ -206,18 +210,16 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
         weight = pStock,
         mat = pMat,
         midy_weight = pMidy,
-        C = pCatch,
-        landings = landings$landings,
-        index = surVec$index,
+        log_landings = log(landings$landings),
+        log_index = log(surVec$index),
         i_zero = surVec$i_zero,
-        C_zero = C_zero,
         iyear = surVec$iyear,
         iage = surVec$iage,
-        isurvey = as.numeric(factor(surVec$survey))-1,
+        isurvey = surVec$isurvey,
         iq = surVec$iq,
         fs = surVec$fs,
+        ft = surVec$ft,
         index_censor = 0,
-        catch_censor = 0,
         use_pe = 0,
         use_cye = 0
     )
@@ -240,8 +242,8 @@ paramSetup <- function(dat){
         log_No=rep(log(1),A-1),
         log_Rec_mean = 5,
         log_std_log_R = 0,
-        log_qparm=rep(0,length(unique(dat$iq))),
-        log_std_index=rep(log(0.3),length(unique(dat$isurvey))),
+        log_qparm=rep(0,length(unique(na.omit(dat$iq)))),
+        log_std_index=rep(log(0.3),length(unique(na.omit(dat$isurvey)))),
         log_std_logF = rep(log(0.1),A),
         log_std_pe = log(0.1),
         log_std_cye = log(0.5),
