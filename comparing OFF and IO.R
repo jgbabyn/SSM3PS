@@ -1,6 +1,6 @@
 
 
-setwd("C:\\Users\\mroberts\\OneDrive - Memorial University of Newfoundland\\Marine Institute\\Classes\\FISH_6005\\Project 1\\Project 1\\data_EDA")
+setwd("C:/Users/fhate/Documents/Stock Assessment/Fish 6005/lectures/Project 1/data_EDA")
 
 IO<-read.table("RV_IO.dat",header=F, sep = "\t", col.names=c("year",paste(rep("age", times=16), seq(from=1, to=16, by=1), sep="")))
 OFF<-read.table("RV_OFF.dat",header=F, sep = "\t", col.names=c("year",paste(rep("age", times=16), seq(from=1, to=16, by=1), sep="")))
@@ -25,7 +25,7 @@ ages<-rep(colnames(mixed), each=22)
 ages<-factor(ages, levels = paste(rep("age", times=16), seq(from=1, to=16, by=1), sep=""))
 
 #update of Figure 22 from CSAS 2017/063
-setwd("C:\\Users\\mroberts\\OneDrive - Memorial University of Newfoundland\\Marine Institute\\Classes\\FISH_6005\\Project 1\\Project 1\\exploring data inputs")
+setwd("C:/Users/fhate/Documents/Stock Assessment/Fish 6005/lectures/Project 1/my files")
 
 #jpeg("IO_OFF_mean.jpeg", width=480, height=480)
 plot(seq(from=1, to=16, by=1), IO.mean.old/OFF.mean.old, type="l", xlab="Age", ylab="IO/OFF", lwd=2, col="red")
