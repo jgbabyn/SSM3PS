@@ -6,17 +6,19 @@ compile("fit.cpp","-O0 -g")
 dyn.load(dynlib("fit"))
 
 library(SSM3PS)
-source("../data-raw/mdata3PS.R")
+source("../data-raw/mdata3Ps.R")
 
 #dat <- datSetup(surveys,catch$catch,landings,stock_wt,
 #                midy_wt,mat,ages=3:16,years=1983:2015,plusGroup=12,match3NOdims=TRUE)
 
 dat <- datSetup(surveys[-2],catch$catch,landings,stock_wt,midy_wt,mat,
-                age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE)
+                age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE,match3NOdims=FALSE)
 
 
-param <- paramSetup(dat)
+##param <- paramSetup(dat)
+param <- dat$param
 
+dat <- dat$data
 qparm_name = levels(as.factor(dat$iq))
 
 mapq = qparm_name

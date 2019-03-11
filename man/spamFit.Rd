@@ -4,7 +4,8 @@
 \alias{spamFit}
 \title{Fit the SPAM model}
 \usage{
-spamFit(dat, map = list(), ...)
+spamFit(data, parameters, map = list(), control = list(),
+  lower = -Inf, upper = Inf, ...)
 }
 \arguments{
 \item{dat}{list of data and parameters from spamSetup}

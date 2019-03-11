@@ -226,6 +226,7 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
     dat$data <- tmb.data
     dat$param <- paramSetup(tmb.data)
     dat$indices <- surVec
+    dat
 }
 
 #'Setup parameters
@@ -251,9 +252,9 @@ paramSetup <- function(dat){
         logit_ar_cye_year = 0,
         log_std_log_C = rep(log(0.3),A),
         log_Rec_dev=rep(5,Y),
-        log_F=matrix(log(0.3),nrow=Y-1,ncol=A),
+        log_F=matrix(log(0.3),nrow=Y,ncol=A),
         pe=matrix(0,nrow=Y,ncol=A),
-        cye=matrix(0,nrow=Y-1,ncol=A)
+        cye=matrix(0,nrow=Y,ncol=A)
     )
 
     parameters.L <- list( 

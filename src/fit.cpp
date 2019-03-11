@@ -82,14 +82,14 @@ Type objective_function<Type>::operator() ()
   
   matrix<Type> log_N(Y,A); 
   matrix<Type> N(Y,A);     
-  matrix<Type> F(Y-1,A);    
-  matrix<Type> Z(Y-1,A);  
-  matrix<Type> EC(Y-1,A);  
-  matrix<Type> log_EC(Y-1,A); 
-  matrix<Type> ECW(Y-1,A); 
-  matrix<Type> C_resid(Y-1,A); 
-  matrix<Type> C_resid_std(Y-1,A);     
-  matrix<Type> std_C_resid(Y-1,A);
+  matrix<Type> F(Y,A);    
+  matrix<Type> Z(Y,A);  
+  matrix<Type> EC(Y,A);  
+  matrix<Type> log_EC(Y,A); 
+  matrix<Type> ECW(Y,A); 
+  matrix<Type> C_resid(Y,A); 
+  matrix<Type> C_resid_std(Y,A);     
+  matrix<Type> std_C_resid(Y,A);
   matrix<Type> B_matrix(Y,A);           
   matrix<Type> SSB_matrix(Y,A); 
   
@@ -105,10 +105,10 @@ Type objective_function<Type>::operator() ()
   vector<Type> log_biomass(Y);  
   vector<Type> ssb(Y); 
   vector<Type> log_ssb(Y); 
-  vector<Type> aveF_46(Y-1);
-  vector<Type> log_aveF_46(Y-1);    
-  vector<Type> aveF_69(Y-1);
-  vector<Type> log_aveF_69(Y-1);   
+  vector<Type> aveF_46(Y);
+  vector<Type> log_aveF_46(Y);    
+  vector<Type> aveF_69(Y);
+  vector<Type> log_aveF_69(Y);   
   
   //**********  start the engine ***************;
   
@@ -117,7 +117,7 @@ Type objective_function<Type>::operator() ()
   
   //compute F 
   for(int a = 0;a < A;++a){ 
-    for(int y = 0;y < Y-1;++y){
+    for(int y = 0;y < Y;++y){
       F(y,a) = exp(std_logF(a)*log_F(y,a)); 
       Z(y,a) = F(y,a) + M(y,a);
     }
@@ -144,9 +144,9 @@ Type objective_function<Type>::operator() ()
   
   // Catch model prediction from Baranov;
   
-  vector<Type> landings_pred(Y-1);
+  vector<Type> landings_pred(Y);
   
-  for(int y = 0;y < Y-1;++y){ 
+  for(int y = 0;y < Y;++y){ 
     landings_pred(y)=zero;
     for(int a = 0;a < A;++a){
       EC(y,a) = N(y,a)*(one - exp(-one*Z(y,a)))*F(y,a)/Z(y,a);
@@ -173,7 +173,7 @@ Type objective_function<Type>::operator() ()
   
   // Catch at age nll;
   
-  for(int y = 0;y < Y-1;++y){
+  for(int y = 0;y < Y;++y){
     for(int a = 0;a < A;++a){
       if(C_zero(y,a) == 1){
 	switch(catch_censor){
@@ -247,10 +247,10 @@ Type objective_function<Type>::operator() ()
   //RW on first age;
   vector<Type> del = log_F.col(0);
   nll -= dnorm(del(0),Type(-10.0),one, true);
-  for(int y = 1;y < Y-1;++y){ 
+  for(int y = 1;y < Y;++y){ 
     nll -= dnorm(del(y),del(y-1),one, true);
   }
-  array<Type> log_F1(Y-1,A-1);
+  array<Type> log_F1(Y,A);
   for(int a = 1;a < A;++a){
     log_F1.col(a-1) = log_F.col(a);
   } 
@@ -262,7 +262,7 @@ Type objective_function<Type>::operator() ()
   
   //year effect nll;
   if(use_cye==1){
-    for(int y = 0;y < Y-1;++y){
+    for(int y = 0;y < Y;++y){
       vector<Type> del = vector<Type>(cye.row(y));
       nll += SCALE(AR1(ar_cye_year),std_cye)(del);
     }
@@ -284,7 +284,7 @@ Type objective_function<Type>::operator() ()
   
   Type tni;
   
-  for(int y = 0;y < Y-1;++y){
+  for(int y = 0;y < Y;++y){
     aveF_46(y) = zero; 
     tni = zero;
     for(int a = 2;a < 4;++a){
