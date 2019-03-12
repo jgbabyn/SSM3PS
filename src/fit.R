@@ -63,3 +63,4 @@ opt <- nlminb(obj$par,obj$fn,obj$gr,control=list(iter.max=500,eval.max=500))
 
 osp <- oneStepPredict(obj,"log_index","keep",discrete=FALSE)
 rep2 <- obj$report()
+sd.rep2 <- sdreport(obj)

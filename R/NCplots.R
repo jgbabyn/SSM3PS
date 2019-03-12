@@ -160,3 +160,62 @@ corrParm <- function(sd.rep){
     pRet = ggcorrplot::ggcorrplot(corr.matrix,method="circle",p.mat=p.mat,insig="blank",colors=c("red","white","blue"))
     pRet
 }
+
+#'Survey/Catch composition plot
+#'
+#' Compare the predicted to actual value of the survey or catch index by age or not.
+#' Returns a ggplot plot. This works for both catch and surveys because everything is done in one
+#' vector now.
+#'
+#' @param rep the report object containing the predicted indices
+#' @param indices the indices list of info
+#' @param indName optional the name of the catch,survey,landing etc. to look at
+#' @param facetAges facet wrap the plots by age? Takes sum of index and mean of residuals over ages if false 
+#' @param residuals plot the residuals instead of the line plots
+#' @param oneStep optional oneStepPredict residuals to supply
+#' 
+#' @export
+surCompPlot <- function(rep,indices,indName=NULL,facetAges=TRUE,residuals=FALSE,oneStep=NULL,loess=FALSE){
+    indy = cbind(ei=rep$Elog_index,indices)
+    indy$logInd = log(indy$index)
+    indy$Age = as.factor(indy$Age)
+    indy$zero = factor(indy$i_zero,labels=c("nonzero","zero"),levels=c(0,1))
+
+    if(!is.null(oneStep)){
+        indy$std_resid_index = oneStep$residual
+    }else{
+        indy$std_resid_index = rep$std_resid_index
+    }
+    
+    if(!is.null(indName)){
+        indy = indy[indy$survey %in% indName,]
+    }
+
+    
+
+    if(facetAges == FALSE){
+        indy = dplyr::group_by(indy,Year,survey)
+        indy = summarize(indy,logInd=sum(logInd),ei=sum(ei),std_resid_index=mean(std_resid_index))
+        facForm = as.formula(~ survey)
+    }else{
+        facForm = as.formula(~ survey + Age)
+    }
+
+    if(!("zero" %in% colnames(indy))){
+        indy$zero = 0
+        indy$zero = factor(indy$zero,labels=c("nonzero","zero"),levels=c(0,1))
+    }
+    
+    
+    if(residuals == FALSE){        
+        pRet = ggplot2::ggplot(indy,ggplot2::aes(x=Year,y=logInd)) + ggplot2::geom_line(ggplot2::aes(x=Year,y=logInd))+ ggplot2::geom_line(ggplot2::aes(x=Year,y=ei),color="red") + ggplot2::xlab("Year") + ggplot2::ylab("Log Index") + ggplot2::facet_wrap(facForm) + ggplot2::geom_point(ggplot2::aes(x=Year,y=logInd,col=zero)) + scale_color_manual(values=c(zero="orange",nonzero="black")) 
+    }else{
+        pRet = ggplot2::ggplot(indy,ggplot2::aes(x=Year,y=std_resid_index)) + ggplot2::geom_point(ggplot2::aes(x=Year,y=std_resid_index,col=zero)) + ggplot2::xlab("Year") + ggplot2::ylab("Standardized Residuals") + ggplot2::facet_wrap(facForm) + scale_color_manual(values=c(zero="orange",nonzero="black"))
+        if(loess==TRUE){
+            pRet = pRet + ggplot2::geom_smooth()
+        }
+        
+    }
+    
+    pRet
+}
