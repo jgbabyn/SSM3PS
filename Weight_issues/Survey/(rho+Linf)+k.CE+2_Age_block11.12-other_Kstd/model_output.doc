@@ -1,0 +1,17 @@
+<!-- html table generated in R 3.5.2 by xtable 1.8-3 package -->
+<!-- Fri Mar 08 14:04:19 2019 -->
+<table border=1>
+<caption align="top"> put some caption text here </caption>
+<tr> <th>  </th> <th> Model name </th>  </tr>
+  <tr> <td> Dev </td> <td align="right"> -883.585 </td> </tr>
+  <tr> <td> Nparm </td> <td align="right"> 6.000 </td> </tr>
+  <tr> <td> AIC </td> <td align="right"> -871.585 </td> </tr>
+  <tr> <td> BIC </td> <td align="right"> -847.881 </td> </tr>
+  <tr> <td> MSE </td> <td align="right"> 0.004 </td> </tr>
+  <tr> <td> Linf </td> <td align="right"> 181.803 </td> </tr>
+  <tr> <td> k_main </td> <td align="right"> 0.055 </td> </tr>
+  <tr> <td> logit_po </td> <td align="right"> -22.295 </td> </tr>
+  <tr> <td> std_k </td> <td align="right"> 0.022 </td> </tr>
+  <tr> <td> std_k.1 </td> <td align="right"> 0.483 </td> </tr>
+  <tr> <td> std_me </td> <td align="right"> 0.065 </td> </tr>
+   </table>

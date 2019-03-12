@@ -1,0 +1,27 @@
+<!-- html table generated in R 3.5.2 by xtable 1.8-3 package -->
+<!-- Mon Mar 11 11:12:28 2019 -->
+<table border=1>
+<caption align="top"> put some caption text here </caption>
+<tr> <th>  </th> <th> Model name </th>  </tr>
+  <tr> <td> Dev </td> <td align="right"> -898.001 </td> </tr>
+  <tr> <td> Nparm </td> <td align="right"> 16.000 </td> </tr>
+  <tr> <td> AIC </td> <td align="right"> -866.001 </td> </tr>
+  <tr> <td> BIC </td> <td align="right"> -802.790 </td> </tr>
+  <tr> <td> MSE </td> <td align="right"> 0.003 </td> </tr>
+  <tr> <td> Linf </td> <td align="right"> 220.000 </td> </tr>
+  <tr> <td> k_main </td> <td align="right"> 0.043 </td> </tr>
+  <tr> <td> logit_po </td> <td align="right"> -21.177 </td> </tr>
+  <tr> <td> std_k </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> std_k.1 </td> <td align="right"> 0.019 </td> </tr>
+  <tr> <td> std_k.2 </td> <td align="right"> 0.034 </td> </tr>
+  <tr> <td> std_k.3 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> std_k.4 </td> <td align="right"> 0.015 </td> </tr>
+  <tr> <td> std_k.5 </td> <td align="right"> 0.070 </td> </tr>
+  <tr> <td> std_k.6 </td> <td align="right"> 0.020 </td> </tr>
+  <tr> <td> std_k.7 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> std_k.8 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> std_k.9 </td> <td align="right"> 0.127 </td> </tr>
+  <tr> <td> std_k.10 </td> <td align="right"> 0.441 </td> </tr>
+  <tr> <td> std_k.11 </td> <td align="right"> 0.681 </td> </tr>
+  <tr> <td> std_me </td> <td align="right"> 0.064 </td> </tr>
+   </table>
