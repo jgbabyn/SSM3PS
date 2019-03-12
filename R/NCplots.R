@@ -88,5 +88,75 @@ bubblePlot <- function(rep,indices,oneStep=NULL,pch=21){
     pRet
 }
 
-    
+#'Plot estimated q patterns for surveys
+#'
+#' Function to plot the estimated q catchabilty patterns for surveys.
+#' Returns a ggplot2 plot. Values are standardized to the max of the q.
+#'
+#' @param sd.rep the sd.rep object
+#' @param indices the indices object
+#' @param alpha alpha value for the confidence intervals
+#' @param qpname name of q-parameters in report if different
+#'
+#' @export
+qPattern <- function(sd.rep,indices,alpha=0.05,qpname="log_qparm"){
+    crit = qnorm(alpha/2,lower.tail=FALSE)
 
+    ind = names(sd.rep$value) == qpname
+
+    indy = indices[!is.na(indices$iq),] ##Needed because catch is now together with surveys 
+    qest = aggregate(indy$iq,list(age=indy$Age,survey=indy$survey),unique)
+    qest$iq = qest$x+1
+    temp = as.numeric(table(qest$iq))
+    qest$nx = temp[qest$iq]
+
+    qest$Eest = exp(sd.rep$value[ind]);
+    qest$sd =  sd.rep$sd[ind]
+    qest$E.L = exp(sd.rep$value[ind] - crit*qest$sd); 
+    qest$E.U = exp(sd.rep$value[ind] + crit*qest$sd);
+
+    qest$colr='grey'
+    qest$colr[qest$nx>1]='black'
+
+
+    temp = tapply(qest$Eest,qest$survey,max)
+    qest$max_Eest = temp[match(qest$survey,names(temp))]
+
+    qest$sEest = qest$Eest/qest$max_Eest
+    qest$sE.L = qest$E.L/qest$max_Eest 
+    qest$sE.U = qest$E.U/qest$max_Eest
+
+    qest$survey1 = paste(qest$survey,' max Q = ',round(qest$max_Eest,digits=3),' (x10000)',sep='')
+
+    qest  = qest[order(qest$survey1,qest$age),]
+
+    ind1 = qest$survey %in% names(temp)
+
+    pRet = ggplot2::ggplot(qest,ggplot2::aes(x=age,y=sEest)) + ggplot2::geom_line() + ggplot2::geom_point() +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin=sE.L,ymax=sE.U),alpha=0.3) + facet_wrap(~survey1) + ggplot2::xlab("Age Class") +
+        ggplot2::ylab("Survey Q Pattern")
+
+    pRet
+}
+
+#'Corrplot of elements
+#'
+#' Corrplot of elements, uses ggcorrplot because I prefer storable plots...
+#'
+#' @param sd.rep
+#'
+#' @export
+#'
+corrParm <- function(sd.rep){
+    dsd = sqrt(diag(sd.rep$cov.fixed))
+    corr.matrix = diag(1/dsd)%*%sd.rep$cov.fixed%*%diag(1/dsd)
+    ##Patch for all the indentical names
+    dsdU = make.unique(names(dsd)) 
+    rownames(corr.matrix) = dsdU
+    colnames(corr.matrix) = dsdU
+
+    p.mat = ggcorrplot::cor_pmat(corr.matrix)
+
+    pRet = ggcorrplot::ggcorrplot(corr.matrix,method="circle",p.mat=p.mat,insig="blank",colors=c("red","white","blue"))
+    pRet
+}
