@@ -15,7 +15,10 @@ LinkingTo:
 Imports: 
     TMB,
     dplyr,
-    tidyr
+    tidyr,
+    lattice,
+    ggplot2,
+    ggpubr
 RoxygenNote: 6.1.1
 Suggests: 
     testthat

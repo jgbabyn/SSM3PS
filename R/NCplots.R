@@ -74,7 +74,7 @@ bubblePlot <- function(rep,indices,oneStep=NULL,pch=21){
     dat$colr[(indices$i_zero==1)&(dat$resid<=0)]='dimgray'
 
     jDarkGray <- 'grey20'
-    pRet = xyplot(factor(Age) ~ Year | survey,data=dat,
+    pRet = lattice::xyplot(factor(Age) ~ Year | survey,data=dat,
                   ylab="Age",main="Residuals",
                   cex = 1.5*sqrt(abs(dat$resid_std)/pi),fill.color=dat$colr,
                   col=jDarkGray,
@@ -173,6 +173,7 @@ corrParm <- function(sd.rep){
 #' @param facetAges facet wrap the plots by age? Takes sum of index and mean of residuals over ages if false 
 #' @param residuals plot the residuals instead of the line plots
 #' @param oneStep optional oneStepPredict residuals to supply
+#' @param add a loess smoother to the residuals?
 #' 
 #' @export
 surCompPlot <- function(rep,indices,indName=NULL,facetAges=TRUE,residuals=FALSE,oneStep=NULL,loess=FALSE){
@@ -219,3 +220,35 @@ surCompPlot <- function(rep,indices,indName=NULL,facetAges=TRUE,residuals=FALSE,
     
     pRet
 }
+
+#'Residuals by year, cohort, age and against expected values
+#'
+#' Returns a list containing all four ggplot objects which can then easily be combined with something like ggarrange.
+#' 
+#' @param rep the report object containing the residuals
+#' @param indices the indices data frame
+#' @param oneStep optional oneStepPredict residuals to use instead
+#'
+#' @export
+#'
+resid4plot <- function(rep,indices,oneStep=NULL){
+    dat = cbind(res=rep$std_resid_index,ei=rep$Elog_index,indices)
+
+    if(!is.null(oneStep)){
+        dat$res = oneStep$residual
+    }
+
+    dat$cohort = dat$Year - dat$Age
+
+    yplot = ggplot2::ggplot(dat,ggplot2::aes(x=Year,y=res,label=as.character(Age))) + ggplot2::geom_text()  + ggplot2::geom_smooth(color="red")
+    
+    cplot = ggplot2::ggplot(dat,ggplot2::aes(x=cohort,y=res)) + ggplot2::geom_point(ggplot2::aes(cohort,res,shape=3)) + ggplot2::geom_smooth(color="red") + ggplot2::scale_shape_identity()
+
+    aplot = ggplot2::ggplot(dat,ggplot2::aes(x=Age,y=res)) + ggplot2::geom_point(ggplot2::aes(Age,res,shape=3)) + ggplot2::geom_smooth(color="red") + ggplot2::scale_shape_identity()
+    
+    eplot = ggplot2::ggplot(dat,ggplot2::aes(x=ei,y=res)) + ggplot2::geom_point(ggplot2::aes(x=ei,y=res,shape=3))  + ggplot2::geom_smooth(color="red") + ggplot2::scale_shape_identity()
+    
+    ret = list(YearPlot=yplot,CohortPlot=cplot,AgePlot=aplot,ExpectedPlot=eplot)
+    ret
+}
+
