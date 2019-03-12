@@ -1,0 +1,42 @@
+<!-- html table generated in R 3.5.1 by xtable 1.8-2 package -->
+<!-- Tue Mar 12 10:44:00 2019 -->
+<table border=1>
+<caption align="top"> Model results, nll = 1638.17, AIC = 3404.34, BIC = 3700.45 </caption>
+<tr> <th>  </th> <th> Est </th> <th> CV(%) </th>  </tr>
+  <tr> <td> std_log_C1 </td> <td align="right"> 1.566 </td> <td align="right"> 38.615 </td> </tr>
+  <tr> <td> std_log_C2 </td> <td align="right"> 0.457 </td> <td align="right"> 21.908 </td> </tr>
+  <tr> <td> std_log_C3 </td> <td align="right"> 0.133 </td> <td align="right"> 79.101 </td> </tr>
+  <tr> <td> std_log_C4 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C5 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C6 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C7 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C8 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C9 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C10 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C11 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C12 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_log_C13 </td> <td align="right"> 0.453 </td> <td align="right"> 4.826 </td> </tr>
+  <tr> <td> std_logF1 </td> <td align="right"> 2.148 </td> <td align="right"> 4153.633 </td> </tr>
+  <tr> <td> std_logF2 </td> <td align="right"> 3.097 </td> <td align="right"> 22.641 </td> </tr>
+  <tr> <td> std_logF3 </td> <td align="right"> 2.007 </td> <td align="right"> 22.874 </td> </tr>
+  <tr> <td> std_logF4 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF5 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF6 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF7 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF8 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF9 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF10 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF11 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF12 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_logF13 </td> <td align="right"> 1.267 </td> <td align="right"> 10.907 </td> </tr>
+  <tr> <td> std_cye </td> <td align="right"> 0.500 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> std_log_R </td> <td align="right"> 0.693 </td> <td align="right"> 10.021 </td> </tr>
+  <tr> <td> std_indexBOTH </td> <td align="right"> 0.953 </td> <td align="right"> 3.775 </td> </tr>
+  <tr> <td> std_indexFRANCE </td> <td align="right"> 1.222 </td> <td align="right"> 5.373 </td> </tr>
+  <tr> <td> std_indexGEAC </td> <td align="right"> 0.999 </td> <td align="right"> 6.960 </td> </tr>
+  <tr> <td> ar_logF_age </td> <td align="right"> 0.000 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> ar_logF_year </td> <td align="right"> 0.990 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> ar_pe_year </td> <td align="right"> 0.000 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> ar_pe_age </td> <td align="right"> 0.000 </td> <td align="right"> 0.000 </td> </tr>
+  <tr> <td> ar_cye_year </td> <td align="right"> 0.500 </td> <td align="right"> 0.000 </td> </tr>
+   </table>
