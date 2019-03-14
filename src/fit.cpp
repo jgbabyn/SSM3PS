@@ -98,7 +98,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER(logit_ar_pe_age);       
   PARAMETER(logit_ar_cye_year); 
   PARAMETER_VECTOR(log_std_log_C);
-  PARAMETER_VECTOR(log_std_CRL); //std. dev for CRLs
+  PARAMETER_VECTOR(log_std_CRL);
   PARAMETER_VECTOR(log_std_landings); //std. dev for landings, size 0 if fit_land=0, else 1
 
   //Random Effects
@@ -182,6 +182,9 @@ Type objective_function<Type>::operator() ()
     log_N(y,0) = log_Rec(y);  
     for(int a = 1;a < A;++a){
       log_N(y,a) = log_N(y-1,a-1) - Z(y-1,a-1) + std_pe*pe(y,a);
+      if(a == A-1){//Plus group
+	log_N(y,a) = logspace_add(log_N(y,a),log_N(y-1,a) - Z(y-1,a)); //log(exp(log x) + exp(log y))
+      }
     }
   }
   N = log_N.array().exp();
@@ -249,7 +252,7 @@ Type objective_function<Type>::operator() ()
   REPORT(ECRL); 
 
   //Ensure landings are handled after catch by doing a seperate loop
-  //Also do catch CRL here too...
+  //DO NLL if fit_land == 1 TOO
   if(fit_land == 1){
     for(int i = 0;i < n;i++){
       int fType = ft(i);
@@ -262,87 +265,120 @@ Type objective_function<Type>::operator() ()
 	  Elog_index(i) = ECRL(iy,ia);
 	  std_index_vec(i) = std_CRL(ia);
 	}
+	  
       }
     
       if(fType == land){
 	Elog_index(i) = log_landings_pred(iy);
 	std_index_vec(i) = std_landings(0);
       }
+    
+
+      if(fType != land){
+	if(fType != Catch){ 
+	  if(i_zero(i) == 1){
+	    switch(index_censor){
+	    case noCensor:
+	      nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	      break;
+	    case basic:
+	      nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
+	      break;
+	    case stable:
+	      nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
+	      break;
+	    default:
+	      error("Invalid index_censor type");
+	      break;
+	    } 
+	  }      
+	  else{
+	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	  }
+	}
+	else{
+	  if(ia < A-1){
+	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	  }//DONT DO ANYTHING FOR CATCH PROPORTIONS A
+	
+	}
+
+      }else if(fType == land){
+	switch(use_cb){
+	case noCensor:
+	  nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true); //Instead of NCAM's fit to the mean fit to obs.
+	  break;
+	case basic:
+	  { //Forgot you can't normally declare vars in a switch, { } are workaround
+	    Type upb = log_index(i) + log(upperMult(i));
+	    Type lowb = log_index(i) + log(lowerMult(i));
+	    Type upbp = pnorm(upb,Elog_index(i),std_index_vec(i));
+	    Type lowbp = pnorm(lowb,Elog_index(i),std_index_vec(i));
+	    nll -= keep(i)*log(upbp-lowbp);
+	    break;
+	  }
+	case stable: //Not really any better if Z > 40 which easily happens, so for illustration purposes?
+	  {
+	    Type upb = log_index(i) + log(upperMult(i));
+	    Type lowb = log_index(i) + log(lowerMult(i));
+	    Type upbp = pnorm4(upb,Elog_index(i),std_index_vec(i),true);
+	    Type lowbp = pnorm4(lowb,Elog_index(i),std_index_vec(i),true);
+	    nll -= keep(i)*logspace_sub(upbp,lowbp);
+	    break;
+	  }
+	case bounds: //The GOOD one
+	  //Yeah I subtract lower bounds in the atomic stuff so lower = -log(lowerMult), bleh
+	  //censored_bounds exists in pnorm4.hpp...
+	  nll -= keep(i)*censored_bounds(log_index(i),Elog_index(i),std_index_vec(i),-log(lowerMult(i)),log(upperMult(i)));
+	  break;
+	default:
+	  error("Unsupported use_cb type");
+	  break;
+	}
+
+      }else{
+	error("What fType is this?");
+      }
+    
     }
   }
   
+  
 
-  //Fit observations to nll
+  //Fit observations to nll here if not fitting landings
+  else if(fit_land == 0){
   for(int i = 0; i < n;i++){
         int fType = ft(i);
 	ia = iage(i);
 	iy = iyear(i);
 
+	
+
 	//Fit everything but landings, if fitting landings
 	if(fType != land){
-	  if(fit_land == true && fType != Catch){ 
-	    if(i_zero(i) == 1){
-	      switch(index_censor){
-	      case noCensor:
-		nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-		break;
-	      case basic:
-		nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
-		break;
-	      case stable:
-		nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
-		break;
-	      default:
-		error("Invalid index_censor type");
-		break;
-	      } 
-	    }else if(fit_land == true && fType == Catch){
-	      if(ia < A-1){
-		nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-	      }
-	    }
-	    else{
+	  if(i_zero(i) == 1){
+	    switch(index_censor){
+	    case noCensor:
 	      nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-	    }
+	      break;
+	    case basic:
+	      nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
+	      break;
+	    case stable:
+	      nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
+	      break;
+	    default:
+	      error("Invalid index_censor type");
+	      break;
+	    } 
+	  }      
+	  else{
+	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
 	  }
 	}
 
-	//Fit landings
-	else if(fType == land && fit_land == 1){
-	  switch(use_cb){
-	  case noCensor:
-	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true); //Instead of NCAM's fit to the mean fit to obs.
-	    break;
-	  case basic:
-	    { //Forgot you can't normally declare vars in a switch, { } are workaround
-	      Type upb = log_index(i) + log(upperMult(i));
-	      Type lowb = log_index(i) + log(lowerMult(i));
-	      Type upbp = pnorm(upb,Elog_index(i),std_index_vec(i));
-	      Type lowbp = pnorm(lowb,Elog_index(i),std_index_vec(i));
-	      nll -= keep(i)*log(upbp-lowbp);
-	      break;
-	    }
-	  case stable: //Not really any better if Z > 40 which easily happens, so for illustration purposes?
-	    {
-	      Type upb = log_index(i) + log(upperMult(i));
-	      Type lowb = log_index(i) + log(lowerMult(i));
-	      Type upbp = pnorm4(upb,Elog_index(i),std_index_vec(i),true);
-	      Type lowbp = pnorm4(lowb,Elog_index(i),std_index_vec(i),true);
-	      nll -= keep(i)*logspace_sub(upbp,lowbp);
-	      break;
-	    }
-	  case bounds: //The GOOD one
-	    //Yeah I subtract lower bounds in the atomic stuff so lower = -log(lowerMult), bleh
-	    //censored_bounds exists in pnorm4.hpp...
-	    nll -= keep(i)*censored_bounds(log_index(i),Elog_index(i),std_index_vec(i),-log(lowerMult(i)),log(upperMult(i)));
-	    break;
-	  default:
-	    error("Unsupported use_cb type");
-	    break;
-	  }
 
-	}
-
+	//"Fit" landings
 	else if(fType == land){//do nothing for landings. Man is this stuff gross
 	}
 
@@ -351,6 +387,13 @@ Type objective_function<Type>::operator() ()
 	}
 	
   }
+  }
+  else{
+    error("fit_land value wrong");
+  }
+  
+  
+  
   
   
   //recruitment

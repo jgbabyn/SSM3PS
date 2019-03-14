@@ -24,8 +24,8 @@ indd <- dat$indices
 param <- dat$param
 #param$param$log_std_CRL = numeric(0) ##Remember A-1
 #param$param$log_std_landings = numeric(0)
-param$param$log_std_CRL = rep(0,ncol(mat)-1)
-param$param$log_std_landings = 0
+param$param$log_std_CRL = rep(0,ncol(dat$data$mat)-1)
+param$param$log_std_landings = log(0.02)
 
 dat <- dat$data
 dat$fit_land = 1
@@ -54,11 +54,29 @@ mapN = list(
   pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
   log_std_cye=factor(NA),  
   logit_ar_cye_year = factor(NA),  
-  cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))) 
+  cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat)))
+)
+
+##Map for fitting landings right now
+mapL = list( 
+  log_qparm = factor(rep(NA,length(mapq))),
+  log_std_logF = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
+  log_std_log_C = factor(rep(NA,length(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")))),
+  log_std_CRL = factor(c("4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
+  logit_ar_logF_age = factor(NA),              
+  logit_ar_logF_year = factor(NA), 
+  log_std_pe=factor(NA),  
+  logit_ar_pe_year = factor(NA),     
+  logit_ar_pe_age = factor(NA),
+  pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
+  log_std_cye=factor(NA),  
+  logit_ar_cye_year = factor(NA),  
+  cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
+  log_std_landings = factor(NA)
 )
 
 dat$index_censor = 2
-obj <- MakeADFun(dat,param$param,random=c("log_Rec_dev","log_F","pe"),DLL="fit",map=mapN)
+obj <- MakeADFun(dat,param$param,random=c("log_Rec_dev","log_F","pe"),DLL="fit",map=mapL)
 
 
 
