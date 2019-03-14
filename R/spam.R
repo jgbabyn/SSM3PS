@@ -105,8 +105,7 @@ pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
 #' This accepts the data setup by mdata3Ps.R in the SPAM data-raw folder.
 #' 
 #'
-#' @param surveys named list of surveys to include
-#' @param catch data.frame of catch to include
+#' @param surveys named list of surveys/catch to include, catch must be named catch in list
 #' @param landings data.frame of landings to include
 #' @param stock_wt data.frame of stock weights
 #' @param midy_wt data.frame of midyear weights
@@ -117,14 +116,13 @@ pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
 #' @param plusGroup optional age to specify as a plus group, indices are summed by that age and weights taken to be the mean of ages in plus group
 #' @param idetect The survey detection limit
 #' @param cdetect The catch dectection limit
-#' @param match3NOdims remove final row from C,C_zero,landings
 #' @param naz.rm replaces NAs and zeros with dectection limits
 #' 
 #'
 #' @export
 #'
-datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,
-                     cdetect=0.0005,match3NOdims=TRUE,naz.rm=TRUE){
+datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,
+                     cdetect=0.0005,naz.rm=TRUE){
     if(is.null(ages)){
         ageL <- grep("Age",names(mat))
         ages <- as.numeric(gsub("Age","",names(mat)[ageL]))
@@ -180,23 +178,23 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
 
     ##Setup for the plus group...
     matVec <- vMake(mat)
-    catchVec <- vMake(catch)
     stockVec <- vMake(stock_wt)
     midyVec <- vMake(midy_wt)
 
     pMat <- pGroup(matVec,plusGroup,sOrM="notS",ages,years)
-    pCatch <- pGroup(catchVec,plusGroup,sOrM="catch",ages,years)
     pStock <- pGroup(stockVec,plusGroup,sOrM="notS",ages,years)
     pMidy <- pGroup(midyVec,plusGroup,sOrM="notS",ages,years)
 
-    landings <- landings[landings$Year %in% years,]/1000
-
-    if(match3NOdims){
-        pMidy = pStock[-nrow(pMidy),]
-        pCatch = pCatch[-nrow(pCatch),]
-        landings = landings[-nrow(landings),]
-        surVec = surVec[surVec$iyear < max(surVec$iyear),]
-    }
+    landings$landings <- landings$landings/1000
+    landings <- landings[landings$Year %in% years,]
+    landings <- data.frame(Year=landings$Year,Age=rep(NA,nrow(landings)),
+                           survey="landings",fs=rep(NA,nrow(landings)),
+                           index = landings$landings,iage=rep(NA,nrow(landings)),
+                           iyear=landings$Year-min(years),i_zero=0,
+                           qname=rep(NA,nrow(landings)),iq=rep(NA,nrow(landings)),
+                           ft=2,isurvey=rep(NA,nrow(landings)))
+    surVec <- rbind(surVec,landings)
+    
 
     if(naz.rm==TRUE){
         surVec$index[is.na(surVec$index)] = 0
@@ -210,7 +208,6 @@ datSetup <- function(surveys,catch,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL
         weight = pStock,
         mat = pMat,
         midy_weight = pMidy,
-        log_landings = log(landings$landings),
         log_index = log(surVec$index),
         i_zero = surVec$i_zero,
         iyear = surVec$iyear,

@@ -1,7 +1,13 @@
 #include <TMB.hpp>
 #include "pnorm4.hpp"
 
-//Simplifed, in my opinion more readable, added stable versions of pnorm...
+/*Convert catch to proportion of catch at age*/
+ template<class Type>
+ vector<Type>  catchProp(vector <Type > catchy){
+   Type tot = catchy.sum();
+   vector<Type> prop = catchy/tot;
+   return prop;
+ }
 
 
 template<class Type>
@@ -26,7 +32,6 @@ Type objective_function<Type>::operator() ()
   DATA_MATRIX(weight); 
   DATA_MATRIX(mat); 
   DATA_MATRIX(midy_weight);
-  DATA_VECTOR(log_landings); 
   DATA_VECTOR(log_index);
   DATA_IVECTOR(i_zero); //A lot of this could be put in one IMATRIX?
   DATA_IVECTOR(iyear);
@@ -38,6 +43,9 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(index_censor); 
   DATA_INTEGER(use_pe);        
   DATA_INTEGER(use_cye);
+  DATA_INTEGER(fit_land); //Fit landings or fit C@A?
+  DATA_VECTOR(lowerMult); //Lower multiplier for censored bounds
+  DATA_VECTOR(upperMult); //Upper multiplier for censored bounds
   
   DATA_VECTOR_INDICATOR(keep,log_index); //Used for one step predict, does not need to be read in from R
   
@@ -48,7 +56,6 @@ Type objective_function<Type>::operator() ()
   
   int A = mat.cols();
   int Y = mat.rows();
-  vector<Type> landings = exp(log_landings);
   vector<Type> index = exp(log_index);
   
   //define parameters;  
@@ -97,7 +104,9 @@ Type objective_function<Type>::operator() ()
   matrix<Type> C_resid_std(Y,A);     
   matrix<Type> std_C_resid(Y,A);
   matrix<Type> B_matrix(Y,A);           
-  matrix<Type> SSB_matrix(Y,A); 
+  matrix<Type> SSB_matrix(Y,A);
+  matrix<Type> C(Y,A); //Yes a matrix of catch
+  matrix<Type> PC(Y,A);
   
   vector<Type> Elog_index(n); 
   vector<Type> resid_index(n); 
@@ -147,11 +156,12 @@ Type objective_function<Type>::operator() ()
   B_matrix = weight.array()*N.array();
   SSB_matrix = mat.array()*B_matrix.array(); 
   
-  //  Catch, Landings, Survey index predictions,nll, and residuals;
+  //  Catch, Landings, Survey index predictions
   //This was done entirely for the sake of oneStepPredict as you need it all in a vector
-  //The easiest way I could think to do this was to prepare the catch data in the same fashion as the survey data
+  //The easiest way I could think to do this was to prepare the catch/landings data in the same fashion as the survey data
   int ia,iy;
   vector<Type> landings_pred(Y);
+  vector<Type> total_catch_pred(Y);
   for(int i = 0;i < n;++i){
     int fType = ft(i);
     ia = iage(i);
@@ -168,43 +178,62 @@ Type objective_function<Type>::operator() ()
     case Catch:
       EC(iy,ia) = N(iy,ia)*(one - exp(-one*Z(iy,ia)))*F(iy,ia)/Z(iy,ia);
       ECW(iy,ia) = EC(iy,ia)*midy_weight(iy,ia);
+      C(iy,ia) = index(i);
       log_EC(iy,ia) = log(EC(iy,ia));
       Elog_index(i) = log_EC(iy,ia);
       resid_index(i) = log_index(i) - log_EC(iy,ia) + cye(iy,ia);
       landings_pred(iy) += ECW(iy,ia);
+      total_catch_pred(iy) += EC(iy,ia);
       std_C_resid(iy,ia) = resid_index(i)/std_log_C(ia);
       std_index_vec(i) = std_log_C(ia);
       break;
     case land:
+      
       break; //Do nothing for now. Must handle landings after catch!
     default:
       error("Fleet Type not implemented");
       break;
-    }
-
-    //Fit nlls here too since why not?
-    if(i_zero(i) == 1){
-      switch(index_censor){
-      case noCensor:
-	nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-	break;
-      case basic:
-	nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
-	break;
-      case stable:
-	nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
-	break;
-      default:
-	error("Invalid index_censor type");
-	break;
-      } 
-    }      
-    else{
-      nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-    }
-
+    }    
   }
   vector<Type> log_landings_pred = log(landings_pred);
+
+  //Maybe this is a bad idea because catch already has tiny values for age 2?
+  for(int y = 0;y < Y; y++){
+    vector<Type> cy = C.row(y);
+    vector<Type> cpy = catchProp(cy);
+    PC.row(y) = cpy;
+  }
+  REPORT(PC);
+
+  //Fit observations to nll
+  for(int i = 0; i < n;i++){
+        int fType = ft(i);
+	ia = iage(i);
+	iy = iyear(i);
+
+	if(fType != land){
+	if(i_zero(i) == 1){
+	  switch(index_censor){
+	  case noCensor:
+	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	    break;
+	  case basic:
+	    nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
+	    break;
+	  case stable:
+	    nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
+	    break;
+	  default:
+	    error("Invalid index_censor type");
+	    break;
+	  } 
+	}      
+	else{
+	  nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	}
+	}
+
+  }
   
   
   //recruitment
