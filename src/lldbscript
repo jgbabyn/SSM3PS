@@ -1,0 +1,4 @@
+process launch -- --vanilla -f fit.R
+thread backtrace
+bt
+quit

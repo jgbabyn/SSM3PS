@@ -4,14 +4,12 @@
 \alias{datSetup}
 \title{Setup data for SPAM model}
 \usage{
-datSetup(surveys, catch, landings, stock_wt, midy_wt, mat, M = 0.2,
+datSetup(surveys, landings, stock_wt, midy_wt, mat, M = 0.2,
   ages = NULL, years = NULL, plusGroup = NULL, idetect = 5e-04,
   cdetect = 5e-04, match3NOdims = TRUE, naz.rm = TRUE)
 }
 \arguments{
-\item{surveys}{named list of surveys to include}
-
-\item{catch}{data.frame of catch to include}
+\item{surveys}{named list of surveys/catch to include, catch must be named catch in list}
 
 \item{landings}{data.frame of landings to include}
 
@@ -30,8 +28,6 @@ datSetup(surveys, catch, landings, stock_wt, midy_wt, mat, M = 0.2,
 \item{idetect}{The survey detection limit}
 
 \item{cdetect}{The catch dectection limit}
-
-\item{match3NOdims}{remove final row from C,C_zero,landings}
 
 \item{naz.rm}{replaces NAs and zeros with dectection limits}
 

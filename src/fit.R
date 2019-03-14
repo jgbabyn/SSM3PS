@@ -2,7 +2,7 @@ library(TMB)
 
 setwd("~/Documents/GitHub/SSM3PS/src")
 compile("fit.cpp","-O0 -g")
-#dyn.unload(dynlib("fit.cpp"))
+dyn.unload(dynlib("fit.cpp"))
 dyn.load(dynlib("fit"))
 
 library(SSM3PS)
@@ -16,14 +16,17 @@ catch$fs = NA
 
 surveys$catch = catch
 surveys = list(RVOff = surveys$RVOff,catch = surveys$catch)
-dat <- datSetup(surveys,catch,landings,stock_wt,midy_wt,mat,
-                age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE,match3NOdims=FALSE)
+dat <- datSetup(surveys,landings,stock_wt,midy_wt,mat,
+                age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE)
 
 indd <- dat$indices
 ##param <- paramSetup(dat)
 param <- dat$param
 
 dat <- dat$data
+dat$fit_land = 0
+dat$lowerMult = rep(0.75,nrow(indd))
+dat$upperMult = rep(1.5,nrow(indd))
 qparm_name = levels(as.factor(dat$iq))
 
 mapq = qparm_name
