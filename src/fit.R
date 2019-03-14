@@ -2,7 +2,7 @@ library(TMB)
 
 setwd("~/Documents/GitHub/SSM3PS/src")
 compile("fit.cpp","-O0 -g")
-dyn.unload(dynlib("fit.cpp"))
+#dyn.unload(dynlib("fit.cpp"))
 dyn.load(dynlib("fit"))
 
 library(SSM3PS)
@@ -16,17 +16,22 @@ catch$fs = NA
 
 surveys$catch = catch
 surveys = list(RVOff = surveys$RVOff,catch = surveys$catch)
-dat <- datSetup(surveys,landings,stock_wt,midy_wt,mat,
+dat <- datSetup(surveys,landings,stock_wt,midy_wt,mat=mat,
                 age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE)
 
 indd <- dat$indices
 ##param <- paramSetup(dat)
 param <- dat$param
+#param$param$log_std_CRL = numeric(0) ##Remember A-1
+#param$param$log_std_landings = numeric(0)
+param$param$log_std_CRL = rep(0,ncol(mat)-1)
+param$param$log_std_landings = 0
 
 dat <- dat$data
-dat$fit_land = 0
+dat$fit_land = 1
 dat$lowerMult = rep(0.75,nrow(indd))
 dat$upperMult = rep(1.5,nrow(indd))
+dat$use_cb = 3
 qparm_name = levels(as.factor(dat$iq))
 
 mapq = qparm_name
@@ -52,8 +57,7 @@ mapN = list(
   cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))) 
 )
 
-dat$index_censor = 0
-dat$catch_censor = 0
+dat$index_censor = 2
 obj <- MakeADFun(dat,param$param,random=c("log_Rec_dev","log_F","pe"),DLL="fit",map=mapN)
 
 

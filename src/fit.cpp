@@ -9,6 +9,30 @@
    return prop;
  }
 
+/*Calculate CRLs from catch proportions*/
+template<class Type>
+matrix<Type> makeCRLs(matrix <Type > cProps){
+  int A = cProps.cols();
+  int Y = cProps.rows();
+  
+  matrix<Type> crls(Y,A-1);
+
+  for(int a = 0; a < A-1;a++){
+    for(int y = 0; y < Y;y++){
+      vector<Type> cprow = cProps.row(y);
+      //get p_a+...+p_A
+      Type denom = cprow.segment(a,A-a).sum();
+      Type num = cProps(y,a);
+      Type pi = num/denom;
+      crls(y,a) = log(pi/(1-pi));
+    }
+  }
+
+  return crls;
+}
+
+      
+  
 
 template<class Type>
 Type objective_function<Type>::operator() ()
@@ -17,7 +41,7 @@ Type objective_function<Type>::operator() ()
     noCensor = 0,
     basic = 1,
     stable = 2,
-    bounds = 3 //Not implemented yet
+    bounds = 3 // implemented :)
   };
 
   enum fleetType {
@@ -46,6 +70,7 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(fit_land); //Fit landings or fit C@A?
   DATA_VECTOR(lowerMult); //Lower multiplier for censored bounds
   DATA_VECTOR(upperMult); //Upper multiplier for censored bounds
+  DATA_INTEGER(use_cb); //option to use censored bounds on landings
   
   DATA_VECTOR_INDICATOR(keep,log_index); //Used for one step predict, does not need to be read in from R
   
@@ -73,6 +98,8 @@ Type objective_function<Type>::operator() ()
   PARAMETER(logit_ar_pe_age);       
   PARAMETER(logit_ar_cye_year); 
   PARAMETER_VECTOR(log_std_log_C);
+  PARAMETER_VECTOR(log_std_CRL); //std. dev for CRLs
+  PARAMETER_VECTOR(log_std_landings); //std. dev for landings, size 0 if fit_land=0, else 1
 
   //Random Effects
   PARAMETER_VECTOR(log_Rec_dev);   
@@ -86,6 +113,8 @@ Type objective_function<Type>::operator() ()
   vector<Type> std_index = exp(log_std_index);
   vector<Type> std_logF = exp(log_std_logF); 
   vector<Type> std_log_C = exp(log_std_log_C);
+  vector<Type> std_CRL = exp(log_std_CRL);
+  vector<Type> std_landings = exp(log_std_landings);
   
   Type ar_logF_age = exp(logit_ar_logF_age)/(one + exp(logit_ar_logF_age));    
   Type ar_logF_year = exp(logit_ar_logF_year)/(one + exp(logit_ar_logF_year)); 
@@ -105,8 +134,12 @@ Type objective_function<Type>::operator() ()
   matrix<Type> std_C_resid(Y,A);
   matrix<Type> B_matrix(Y,A);           
   matrix<Type> SSB_matrix(Y,A);
-  matrix<Type> C(Y,A); //Yes a matrix of catch
+  matrix<Type> C(Y,A); //Yes a matrix of catch not read in
   matrix<Type> PC(Y,A);
+  matrix<Type> EPC(Y,A);
+  matrix<Type> CRL(Y,A-1);
+  matrix<Type> ECRL(Y,A-1);
+  matrix<Type> EPoC(Y,A);
   
   vector<Type> Elog_index(n); 
   vector<Type> resid_index(n); 
@@ -161,7 +194,6 @@ Type objective_function<Type>::operator() ()
   //The easiest way I could think to do this was to prepare the catch/landings data in the same fashion as the survey data
   int ia,iy;
   vector<Type> landings_pred(Y);
-  vector<Type> total_catch_pred(Y);
   for(int i = 0;i < n;++i){
     int fType = ft(i);
     ia = iage(i);
@@ -183,13 +215,11 @@ Type objective_function<Type>::operator() ()
       Elog_index(i) = log_EC(iy,ia);
       resid_index(i) = log_index(i) - log_EC(iy,ia) + cye(iy,ia);
       landings_pred(iy) += ECW(iy,ia);
-      total_catch_pred(iy) += EC(iy,ia);
       std_C_resid(iy,ia) = resid_index(i)/std_log_C(ia);
       std_index_vec(i) = std_log_C(ia);
       break;
-    case land:
-      
-      break; //Do nothing for now. Must handle landings after catch!
+    case land: // Must handle landings after catch!
+      break;
     default:
       error("Fleet Type not implemented");
       break;
@@ -197,13 +227,50 @@ Type objective_function<Type>::operator() ()
   }
   vector<Type> log_landings_pred = log(landings_pred);
 
-  //Maybe this is a bad idea because catch already has tiny values for age 2?
+  
+  // Catch proportion stuff
   for(int y = 0;y < Y; y++){
     vector<Type> cy = C.row(y);
     vector<Type> cpy = catchProp(cy);
     PC.row(y) = cpy;
+
+    vector<Type> ecy = EC.row(y);
+    vector<Type> ecpy = catchProp(ecy);
+    EPC.row(y) = ecpy;
+    
   }
+  
+  CRL = makeCRLs(PC);
+  ECRL = makeCRLs(EPC);
+  
   REPORT(PC);
+  REPORT(EPC);
+  REPORT(CRL);
+  REPORT(ECRL); 
+
+  //Ensure landings are handled after catch by doing a seperate loop
+  //Also do catch CRL here too...
+  if(fit_land == 1){
+    for(int i = 0;i < n;i++){
+      int fType = ft(i);
+      iy = iyear(i);
+      ia = iage(i);
+    
+      if(fType == Catch){
+	if(ia < A-1){ //CRL doesn't exist for A, so for ia = A-1 we don't want to add anything to nll
+	  log_index(i) = CRL(iy,ia);
+	  Elog_index(i) = ECRL(iy,ia);
+	  std_index_vec(i) = std_CRL(ia);
+	}
+      }
+    
+      if(fType == land){
+	Elog_index(i) = log_landings_pred(iy);
+	std_index_vec(i) = std_landings(0);
+      }
+    }
+  }
+  
 
   //Fit observations to nll
   for(int i = 0; i < n;i++){
@@ -211,28 +278,78 @@ Type objective_function<Type>::operator() ()
 	ia = iage(i);
 	iy = iyear(i);
 
+	//Fit everything but landings, if fitting landings
 	if(fType != land){
-	if(i_zero(i) == 1){
-	  switch(index_censor){
-	  case noCensor:
-	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-	    break;
-	  case basic:
-	    nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
-	    break;
-	  case stable:
-	    nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
-	    break;
-	  default:
-	    error("Invalid index_censor type");
-	    break;
-	  } 
-	}      
-	else{
-	  nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
-	}
+	  if(fit_land == true && fType != Catch){ 
+	    if(i_zero(i) == 1){
+	      switch(index_censor){
+	      case noCensor:
+		nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+		break;
+	      case basic:
+		nll -= keep(i)*log(pnorm(log_index(i),Elog_index(i),std_index_vec(i)));
+		break;
+	      case stable:
+		nll -= keep(i)*pnorm4(log_index(i),Elog_index(i),std_index_vec(i),true);
+		break;
+	      default:
+		error("Invalid index_censor type");
+		break;
+	      } 
+	    }else if(fit_land == true && fType == Catch){
+	      if(ia < A-1){
+		nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	      }
+	    }
+	    else{
+	      nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true);
+	    }
+	  }
 	}
 
+	//Fit landings
+	else if(fType == land && fit_land == 1){
+	  switch(use_cb){
+	  case noCensor:
+	    nll -= keep(i)*dnorm(log_index(i),Elog_index(i),std_index_vec(i),true); //Instead of NCAM's fit to the mean fit to obs.
+	    break;
+	  case basic:
+	    { //Forgot you can't normally declare vars in a switch, { } are workaround
+	      Type upb = log_index(i) + log(upperMult(i));
+	      Type lowb = log_index(i) + log(lowerMult(i));
+	      Type upbp = pnorm(upb,Elog_index(i),std_index_vec(i));
+	      Type lowbp = pnorm(lowb,Elog_index(i),std_index_vec(i));
+	      nll -= keep(i)*log(upbp-lowbp);
+	      break;
+	    }
+	  case stable: //Not really any better if Z > 40 which easily happens, so for illustration purposes?
+	    {
+	      Type upb = log_index(i) + log(upperMult(i));
+	      Type lowb = log_index(i) + log(lowerMult(i));
+	      Type upbp = pnorm4(upb,Elog_index(i),std_index_vec(i),true);
+	      Type lowbp = pnorm4(lowb,Elog_index(i),std_index_vec(i),true);
+	      nll -= keep(i)*logspace_sub(upbp,lowbp);
+	      break;
+	    }
+	  case bounds: //The GOOD one
+	    //Yeah I subtract lower bounds in the atomic stuff so lower = -log(lowerMult), bleh
+	    //censored_bounds exists in pnorm4.hpp...
+	    nll -= keep(i)*censored_bounds(log_index(i),Elog_index(i),std_index_vec(i),-log(lowerMult(i)),log(upperMult(i)));
+	    break;
+	  default:
+	    error("Unsupported use_cb type");
+	    break;
+	  }
+
+	}
+
+	else if(fType == land){//do nothing for landings. Man is this stuff gross
+	}
+
+	else{
+	  error("fType not supported in nll");
+	}
+	
   }
   
   
