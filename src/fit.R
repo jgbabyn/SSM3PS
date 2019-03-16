@@ -11,10 +11,6 @@ source("../data-raw/mdata3Ps.R")
 #dat <- datSetup(surveys,catch$catch,landings,stock_wt,
 #                midy_wt,mat,ages=3:16,years=1983:2015,plusGroup=12,match3NOdims=TRUE)
 
-catch = catch$catch
-catch$fs = NA
-
-surveys$catch = catch
 surveys = list(RVOff = surveys$RVOff,catch = surveys$catch)
 dat <- datSetup(surveys,landings,stock_wt,midy_wt,mat=mat,
                 age=2:16,years=1983:2015,plusGroup=14,naz.rm=TRUE)
@@ -22,16 +18,9 @@ dat <- datSetup(surveys,landings,stock_wt,midy_wt,mat=mat,
 indd <- dat$indices
 ##param <- paramSetup(dat)
 param <- dat$param
-#param$param$log_std_CRL = numeric(0) ##Remember A-1
-#param$param$log_std_landings = numeric(0)
-param$param$log_std_CRL = rep(0,ncol(dat$data$mat)-1)
-param$param$log_std_landings = log(0.02)
 
 dat <- dat$data
-dat$fit_land = 1
-dat$lowerMult = rep(0.75,nrow(indd))
-dat$upperMult = rep(1.5,nrow(indd))
-dat$use_cb = 3
+
 qparm_name = levels(as.factor(dat$iq))
 
 mapq = qparm_name
@@ -42,6 +31,7 @@ ind = mapq %in% c(paste("OFF:",agep,sep=''),paste("IO:",agep,sep=''))
 mapq[ind] = paste("OFF:",rep('6+',9),sep='')
 
 param$param$log_qparm <- log(c(0.1,0.3,0.7,1,1,1,1,1,1,1,1,1,1))
+
 mapN = list( 
   log_qparm = factor(rep(NA,length(mapq))),
   log_std_logF = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),

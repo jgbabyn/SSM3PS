@@ -1,0 +1,17 @@
+[0] Config.pm:302> INFO - This is Biber 2.11
+[0] Config.pm:305> INFO - Logfile is '/Users/jonathanbabyn/Documents/GitHub/SSM3PS/analysis/.texpadtmp/spamReport.blg'
+[32] biber-darwin:313> INFO - === Fri Mar 15, 2019, 08:45:18
+[53] Biber.pm:371> INFO - Reading '/Users/jonathanbabyn/Documents/GitHub/SSM3PS/analysis/.texpadtmp/spamReport.bcf'
+[127] Biber.pm:857> INFO - Found 1 citekeys in bib section 0
+[138] Biber.pm:3976> INFO - Processing section 0
+[148] Biber.pm:4136> INFO - Looking for bibtex format file '/Users/jonathanbabyn/Documents/GitHub/SSM3PS/analysis/spam.bib' for section 0
+[149] bibtex.pm:1500> INFO - LaTeX decoding ...
+[154] bibtex.pm:1316> INFO - Found BibTeX data source '/Users/jonathanbabyn/Documents/GitHub/SSM3PS/analysis/spam.bib'
+[164] Utils.pm:193> WARN - month field 'Apr' in entry 'Fournier_2012' is not an integer - this will probably not sort properly.
+[172] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[172] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[172] Biber.pm:3804> INFO - Sorting list 'nty/global//global/global' of type 'entry' with template 'nty' and locale 'en-US'
+[172] Biber.pm:3810> INFO - No sort tailoring available for locale 'en-US'
+[179] bbl.pm:617> INFO - Writing '/Users/jonathanbabyn/Documents/GitHub/SSM3PS/analysis/.texpadtmp/spamReport.bbl' with encoding 'UTF-8'
+[179] bbl.pm:720> INFO - Output to /Users/jonathanbabyn/Documents/GitHub/SSM3PS/analysis/.texpadtmp/spamReport.bbl
+[180] Biber.pm:110> INFO - WARNINGS: 1

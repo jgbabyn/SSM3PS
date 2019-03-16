@@ -1,0 +1,238 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[intoc,english]{nomencl}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{float}
+\usepackage[margin=1in]{geometry}
+\usepackage[section]{placeins}
+\usepackage{biblatex}
+\usepackage{comment}
+\usepackage{xcolor}
+\renewcommand{\nomname}{List of Abbreviations and Symbols Used}
+\makenomenclature
+\renewbibmacro{in:}{}
+%\addbibresource{assessment.bib}
+
+\specialcomment{DrF}{\begingroup\ttfamily\color{blue}}{\endgroup}
+
+\specialcomment{Me}{\begingroup\ttfamily\color{red}}{\endgroup}
+%Control for the comments package
+%\excludecomment{DrF}
+
+\begin{document}
+
+<<setup,include=FALSE,tidy=TRUE,hide=TRUE>>=
+
+@
+
+\title{FPCA Weight and Maturity Investigation}
+\author{Jonathan Babyn}
+\date{\today}
+\maketitle
+
+\section{FDA and FPCA bare minimum context}
+FDA is functional data analysis, basically data analysis performed on curves. FPCA is Functional Principal Component Analysis and is the extension of the classical statistical technique Principal Component Analysis used to find trends in the data. FPCA extends this to curves/functions, it can also be used for noise reduction and interpolation. 
+
+If you want more details on this I can point you to some books/articles or my MSc. thesis because it was basically centred around FDA. 
+
+Matt mentioned smoothing the maturity curves and I thought maybe FPCA would be a way to do it. I also tried it on the DFO stock weights and commercial weights and I think it did a pretty good job there too.
+
+\section{Smoothing Mats}
+
+
+<<datSetup,echo=FALSE>>=
+setwd("~/Documents/GitHub/SSM3PS/data-raw/data_EDA")
+
+cnames = c('Year',paste0('Age',1:16))
+mat = read.table(file="mat.txt",header=FALSE,col.names=cnames)
+
+midy_wt = read.table(file='midy_wt.dat',header=TRUE)
+
+comm_wt = read.table(file='comm_wt.txt',header=TRUE)
+
+cnames = c('Year',paste0('Age',2:14))
+DFO_stock_wt = read.table(file="DFO_stock_wt.txt",header=TRUE,col.names=cnames)
+
+stock_wt = read.table(file='stock_wt.dat',header=TRUE)
+
+##Weird old FDA tangent because
+library(fdapace)
+tcomm = t(comm_wt[comm_wt$Year %in% 1978:2016,-1])
+
+
+ids = rep(1:ncol(tcomm),each=nrow(tcomm))
+s <- 3:14
+tv <- rep(s,ncol(tcomm))
+
+fdaIn <- MakeFPCAInputs(IDs=ids,tVec=tv,tcomm)
+cWClust <- FClust(fdaIn$Ly,fdaIn$Lt,k=3,optnsFPCA=list(FVEthreshold=0.9))
+names(cWClust$cluster) = 1978:2014
+
+tcomm = t(comm_wt[,-1])
+
+
+ids = rep(1:ncol(tcomm),each=nrow(tcomm))
+s <- 3:14
+tv <- rep(s,ncol(tcomm))
+fdaIn <- MakeFPCAInputs(IDs=ids,tVec=tv,tcomm)
+
+
+FPCAWeights <- FPCA(fdaIn$Ly,fdaIn$Lt,optns=list(dataType="Sparse"))
+
+##Instead of ages 3 to 14, I need 1 to 16
+newGrid <- 1:16
+nMu <- spline(FPCAWeights$workGrid,FPCAWeights$mu,xout=newGrid)$y
+nPhi <- apply(FPCAWeights$phi,2,function(y) spline(FPCAWeights$workGrid,y,xout=newGrid)$y)
+nFPCA <- list(cumFVE = FPCAWeights$cumFVE,xiEst=FPCAWeights$xiEst,mu=nMu,phi=nPhi)
+
+##Try to impute ages 1,2,15,16 imputing at bounds is sort of gross, but the mean function is so simple this might actually
+##be OKAY. Worth a shot anyways.
+
+##Remove noise by extrapolating on the fitted values
+ncomm = ConvertSupport(FPCAWeights$workGrid,3:14,phi=t(fitted(FPCAWeights,K=1)))
+##Spots for missing ages
+aM = rep(NA,ncol(ncomm))
+ncomm = rbind(aM,ncomm)
+ncomm = rbind(aM,ncomm)
+ncomm = rbind(ncomm,aM)
+ncomm = rbind(ncomm,aM)
+
+##I don't think 2 year old fish weigh nothing
+tstock = t(DFO_stock_wt[DFO_stock_wt$Year %in% 1978:2019,-(1:2)])
+
+ids = rep(1:ncol(tstock),each=nrow(tstock))
+s <- 3:14
+tv <- rep(s,ncol(tstock))
+
+fdaIn <- MakeFPCAInputs(IDs=ids,tVec=tv,tstock)
+DSClust <- FClust(fdaIn$Ly,fdaIn$Lt,optnsFPCA=list(FVEthreshold=0.9))
+names(DSClust$cluster) = 1978:2017
+
+tstock = t(DFO_stock_wt[,-(1:2)])
+
+ids = rep(1:ncol(tstock),each=nrow(tstock))
+s <- 3:14
+tv <- rep(s,ncol(tstock))
+
+fdaIn <- MakeFPCAInputs(IDs=ids,tVec=tv,tstock)
+FPCASWeights <- FPCA(fdaIn$Ly,fdaIn$Lt,optns=list(dataType="Sparse"))
+
+##Repeat steps for imputing ages
+nstock = ConvertSupport(FPCASWeights$workGrid,3:14,phi=t(fitted(FPCASWeights,K=1)))
+##Spots for missing ages
+aM = rep(NA,ncol(nstock))
+nstock = rbind(aM,nstock)
+nstock = rbind(aM,nstock)
+nstock = rbind(nstock,aM)
+nstock = rbind(nstock,aM)
+
+nMu <- spline(FPCASWeights$workGrid,FPCASWeights$mu,xout=newGrid)$y
+nPhi <- apply(FPCASWeights$phi,2,function(y) spline(FPCASWeights$workGrid,y,xout=newGrid)$y)
+nSFPCA <- list(cumFVE = FPCASWeights$cumFVE,xiEst=FPCASWeights$xiEst,mu=nMu,phi=nPhi)
+
+
+##LITERALLY DID NOT THINK ID BE USING THIS AGAIN
+FPCAImpute <- function(FPCAobj,data,tau){
+    L <- min(which(FPCAobj$cumFVE >= tau*100))
+    impute <- matrix(0,nrow=nrow((FPCAobj$xiEst)),ncol=nrow(FPCAobj$phi))
+    for(i in 1:length(FPCAobj$xiEst[,1])){
+     impute[i,] =  FPCAobj$xiEst[i,1:L]%*%t(FPCAobj$phi[,1:L]) + FPCAobj$mu
+    }
+    for(i in 1:length(data))
+        {
+            if(is.na(data[i])){
+                data[i] <- impute[i]
+                }
+        }
+    data
+}
+
+fpcaStock_wt <- FPCAImpute(nSFPCA,t(nstock),0.9)
+fpcaComm_wt <- FPCAImpute(nFPCA,t(ncomm),0.9)
+
+fStock_wt <- data.frame(Year=DFO_stock_wt$Year)
+fStock_wt <- cbind(fStock_wt,fpcaStock_wt)
+names(fStock_wt) = c("Year",paste0("Age",1:16))
+
+fComm_wt <- data.frame(Year=comm_wt$Year)
+fComm_wt <- cbind(fComm_wt,fpcaComm_wt)
+names(fComm_wt) = c("Year",paste0("Age",1:16))
+
+##Now for Maturities!
+##Squeeze to apply qlogis, so I can plogis on the return and ensure 0-1 bounds
+mats = apply(mat[,-1],1,function(x) mice::squeeze(x,bounds=c(0.00000000001,0.99999999999)))
+mats = qlogis(mats)
+
+ids = rep(1:nrow(mats),each=ncol(mats))
+s <- mat$Year
+tv <- rep(s,nrow(mats))
+
+fdaIn <- MakeFPCAInputs(IDs=ids,tVec=tv,t(mats))
+FPCAMat <- FPCA(fdaIn$Ly,fdaIn$Lt,optns=list(methodMuCovEst="smooth",userBwMu=14))
+fMaty <- fitted(FPCAMat,K=1)
+
+fpMat <- plogis(fMaty)
+fMat <- mat$Year
+fMat <- cbind(fMat,t(fpMat))
+fMat <- as.data.frame(fMat)
+
+names(fMat) <- c("Year",paste0("Age",1:16))
+
+@
+
+FPCA was applied to the maturities with each age being considered a measurement along the years. The FPCA was performed in logit space so that when transformed back they were ensured to be between 0-1. FPCA breaks curves down into a mean function or mean curve and the corresponding eigenfunctions. I had to somewhat manually smooth the mean function to get something that seemed reasonable. Letting it pick would keep a lot of the peaks and valleys in the data here. Figure \ref{fig:FPCAMatP} is a dianostic plot of the maturity curve FPCA, showing the first three eigenfunctions, the mean function and the variability explained by the eigenfunctions.
+
+
+<<FPCAMatP,fig.cap="Maturity FPCA diagnostic plots",echo=FALSE>>=
+plot(FPCAMat)
+@ 
+
+The FPCA process removes a lot of noise in the data while keeping the parts that explain most of the variability. A comparision of the smoothed vs. unsmoothed appears in \ref{fig:matp2}. Most of the noise is gone while the overall trend is captured. 
+
+<<matp2,fig.cap="Smoothed Maturitys by year vs. not",echo=FALSE>>=
+par(mfrow=c(1,2))
+matplot(fMat[fMat$Year >= 1959,-1],type="l",main="Smooth")
+matplot(mat[fMat$Year >= 1959,-1],type="l",main="Unsmoothed")
+@ 
+
+When looking at the smoothed logistic regression maturity curves for each year, it also cleanly breaks into two time periods, pre-1978 and post-1978.
+
+<<matp3,fig.cap="The logistic regression curves.Red is post 1978.",echo=FALSE>>=
+par(mfrow=c(1,2))
+matplot(t(fMat[fMat$Year %in% 1959:1978,-1]),type="l",col="blue",main="Smooth")
+matplot(t(fMat[fMat$Year %in% 1978:2019,-1]),type="l",col="red",add=TRUE)
+matplot(t(mat[mat$Year %in% 1959:1978,-1]),type="l",col="blue",main="Unsmoothed")
+matplot(t(mat[mat$Year %in% 1978:2019,-1]),type="l",col="red",add=TRUE)
+
+@ 
+
+\section{Smoothing Weights}
+
+FPCA was also applied on the commerical weights and the DFO stock weights. Over 90\% of the variability is explained by a single eigenfunction and really reduces the noise when using data with only a single functional principal component. When looking at the data represented by a single FPC, the noise is much reduced and a couple things become visible. To me, it looks as though the weights break into 3 periods, the really wonky late stuff with 14 year olds under 6kg, those 14 year olds under 8Kg and those above. Looking at the years this is pretty cleanly pre-1994 for those above 8Kg, then post 1994, then the last 3 years of the data as seen in fig. \ref{fig:wpSS}. I tried using a clustering algorithm on the FPC scores generated and it found the same thing on commercial data, only pre and post 1994 for the stock weights. Since the DFO stock and commercial weight data is only ages 3 to 14 I needed to extend it to 1 through 16. This was done by extrapolating the mean function and the FPCs using splines. I don't really like extrapolating splines at the edges because they often do really wonky things but it worked pretty well here IMO since this are somewhat simple curves. The extrapolation is seen in fig \ref{fig:exx}.
+
+<<wpSS,fig.cap="The fitted commercial weights with a single FPC, ages 3 to 14(ignore axis)",echo=FALSE>>=
+matplot(t(fpcaComm_wt[,-c(1:2,14:16)]),type="l",main="Smooth 1 FPC")
+##matplot(t(comm_wt[,-1]),type="l",main="Smooth 1 FPC")
+
+@
+
+<<exx,fig.cap="Extrapolating the smoothed data to more ages",echo=FALSE>>=
+matplot(t(fpcaComm_wt),type="l",main="All Ages")
+@
+
+I think these smoothed weights compare pretty favourably with Noel's midy\_wt and stock\_wt stuff. 
+
+
+<<wP,fig.cap="Diagnostic FPCA plots for the commercial weights. Stock weights more or less is identical.",echo=FALSE>>=
+plot(FPCAWeights)
+@ 
+
+%\tableofcontents
+%\newpagjh
+%\printnomenclature
+
+\printbibliography
+
+\end{document}

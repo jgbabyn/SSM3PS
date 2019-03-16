@@ -1,0 +1,131 @@
+\documentclass[11pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[intoc,english]{nomencl}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{float}
+\usepackage[margin=1in]{geometry}
+\usepackage[section]{placeins}
+\usepackage{biblatex}
+\usepackage{comment}
+\usepackage{xcolor}
+\usepackage[toc,page]{appendix}
+\usepackage[acronym]{glossaries}
+\renewcommand{\nomname}{List of Abbreviations and Symbols Used}
+\makenomenclature
+\makeglossaries
+\renewbibmacro{in:}{}
+\addbibresource{spam.bib}
+
+\newacronym{tmb}{TMB}{Template Model Builder}
+\newacronym{ad}{AD}{Automatic Differentation}
+\newacronym{mle}{MLE}{Maximum Likelihood Estimation}
+\newacronym{la}{LA}{Laplace Approximation}
+\newacronym{cdf}{CDF}{Cumulative Distribution Function}
+\newacronym{pdf}{PDF}{Probability Density Function}
+\newacronym{spam}{SPAM}{St. Pierre bank Assessment Model}
+
+\specialcomment{DrF}{\begingroup\ttfamily\color{blue}}{\endgroup}
+
+\specialcomment{Me}{\begingroup\ttfamily\color{red}}{\endgroup}
+%Control for the comments package
+%\excludecomment{DrF}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+
+
+\title{St. Pierre bank assessment model}
+\author{Jonathan Babyn}
+\date{\today}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\printnomenclature
+
+\begin{appendices}
+\section{Numerically stable logged normal cumulative distribution function derivatives in TMB}
+\texttt{\acrshort{tmb}} uses \acrfull{ad} to generate the first and second derivatives which are used to help with both performing \acrshort{mle} for parameters and integrating random effects out of the likelihood with the \acrfull{la}. \texttt{\acrshort{tmb}} accomplishes this with a mixture of forward and reverse \acrshort{ad} accumulation modes. Further details on \acrshort{ad} can be seen in Fournier et al\cite{Fournier_2012}. \texttt{\acrshort{tmb}} automatically tries to determine the derivatives of the user's template. However, it can not automatically determine the most numerically stable form of the derivative which can often be necessary when working with extremely small values that can commonly occur when working with probabilities. \texttt{\acrshort{tmb}} also includes the ability to manually define the forward and reverse modes for a given function to overcome this limitation using atomic functions. By default \texttt{\acrshort{tmb}} includes a built in atomic version of the normal \acrshort{cdf}, \texttt{pnorm} based on the version in \texttt{R}'s \texttt{C} language math library. This built-in version does not support the ability to return a logged value of the probability and shares the same limitation of returning 0 or 1 for negative or positive values of standard normal $Z$ scores when $|Z| > \sim 38$ due to floating point limitations. This clearly means that for any $Z < -38$, \texttt{\acrshort{tmb}} will return a \texttt{NaN} in the gradient when trying to perform \texttt{log(pnorm(Z))} due to $\log(0)$ being negative infinity. In practice however this is actually much worse since the derivative of \texttt{log(pnorm(Z))} is 
+\begin{equation}\label{derlNCDF}
+	{{e^ {- {{z^2}\over{2}} }}\over{\sqrt{2\pi}\,\left({{
+ \mathrm{erf}\left({{z}\over{\sqrt{2}}}\right)}\over{2}}+{{1}\over{2
+ }}\right)}}
+\end{equation}
+and easily results in the division of two extremely small numbers. With floating point limitations this quickly becomes undefined if not handled correctly. 
+
+I created an atomic function to specifically deal with the problem of numerical stability when trying to do \texttt{log(pnorm(Z))} and similar calculations in the objective function of \acrshort{spam} such as those done when using a censored likelihood for the detection limit for fitting the observation equations for the survey indices. This requires specifying more numerically stable versions for both the forward and reverse \acrshort{ad} modes. For the forward mode this is just the \texttt{double C++} function giving the log of the normal \acrshort{cdf} and all that requires is calling the version of \texttt{pnorm} in \texttt{R}'s \texttt{C} math library with the \texttt{give.log} flag turned on. For the reverse mode just using Equation \ref{derlNCDF} is not numerically stable due to the division. It can easily be seen that Equation \ref{derlNCDF} is equivalent to 
+\begin{equation}\label{logder}
+	\exp \left (\log \left({{e^ {- {{z^2}\over{2}} }}\over{\sqrt{2\pi}}}
+ \right) - \log \left({{\mathrm{erf}\left({{z}\over{\sqrt{2}}}\right)}\over{2
+ }}+{{1}\over{2}}\right) \right).
+\end{equation}
+ Working in log space is much less likely to result in under or overflow of floating point values when performing division of small numbers. Using numerically stable versions of the logged normal \acrshort{pdf} \& \acrshort{cdf}s and the form in Equation \ref{logder} results in a numerically stable reverse mode derivative for \texttt{log(pnorm(Z))}. The atomic function was wrapped in the function \texttt{pnorm4} and made available for others to use in the \texttt{C++} header file \texttt{pnorm4.hpp}. Using \texttt{pnorm4(Z)} in place of \texttt{log(pnorm(Z))} allows for running one-sided censor likelihood bounds without the need for using two runs of optimization.
+ 
+ It's accuracy was checked by comparing the results of the gradient and hessian generated by \texttt{\acrshort{tmb}} for \texttt{pnorm4} against the numerical first and second derivatives of \texttt{pnorm4} done by the \texttt{R} software package \texttt{numDeriv} along with the brute force first and second derivatives of the normal log(\acrshort{cdf}) calculated by the open-source computer algebra system \texttt{Maxima} with 5000 digits of floating point precision. 
+\subsection{Extending stability to censored bounds} 	
+Censored likelihood bounds pose a similar problem to the above. When using the built-in functions to add normally distributed censored log-likelihood bounds this can be done like \texttt{log(pnorm(ZU))-log(pnorm(ZU))} where \texttt{ZU} \& \texttt{ZL} are Z scores of the upper and lower bounds respectively. Just replacing the calls to \texttt{pnorm} with the more stable \texttt{pnorm4} and using the brute force approach or \texttt{logspace\_sub} to perform the subtraction is not stable either. This is because for $Z > 38$ \texttt{pnorm} will return 1, or 0 for the logged version which will then result in trying to take the log of 0, again leading to \texttt{NaN} in the gradient.
+
+The normal CDF of the upper and lower bounds can be thought of as $\Phi(ZU)=1-\epsilon_u$ and $\Phi(ZL)=1-\epsilon_l$ where the $\epsilon$s are some value greater than zero and the censored log-likelihood bound is 
+\begin{equation}
+	\log(\Phi(ZU)-\Phi(ZL)) = \log(1-\epsilon_u-(1-\epsilon_l)) = \log(\epsilon_l-\epsilon_u))
+\end{equation}
+
+\end{appendices}
+
+
+\printbibliography
+
+\end{document}

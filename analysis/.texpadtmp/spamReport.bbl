@@ -1,0 +1,100 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.9 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global}
+    \entry{Fournier_2012}{article}{}
+      \name{author}{8}{}{%
+        {{hash=03304ae467242a5f6891910cd6c8fdfe}{%
+           family={Fournier},
+           familyi={F\bibinitperiod},
+           given={David\bibnamedelima A.},
+           giveni={D\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=4956bc4e280a1edd402901e2fefac468}{%
+           family={Skaug},
+           familyi={S\bibinitperiod},
+           given={Hans\bibnamedelima J.},
+           giveni={H\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=fbd2889742320e8bcb34d671ed163758}{%
+           family={Ancheta},
+           familyi={A\bibinitperiod},
+           given={Johnoel},
+           giveni={J\bibinitperiod}}}%
+        {{hash=843f9a1ce3348083ff02f16ee5a1202f}{%
+           family={Ianelli},
+           familyi={I\bibinitperiod},
+           given={James},
+           giveni={J\bibinitperiod}}}%
+        {{hash=704fdb18fc91c80bf0399660485a90d8}{%
+           family={Magnusson},
+           familyi={M\bibinitperiod},
+           given={Arni},
+           giveni={A\bibinitperiod}}}%
+        {{hash=a15cb88b45b32c005c697b5642e3d073}{%
+           family={Maunder},
+           familyi={M\bibinitperiod},
+           given={Mark\bibnamedelima N.},
+           giveni={M\bibinitperiod\bibinitdelim N\bibinitperiod}}}%
+        {{hash=4f11652d75ee2e5512ea3ea7d7e37b6d}{%
+           family={Nielsen},
+           familyi={N\bibinitperiod},
+           given={Anders},
+           giveni={A\bibinitperiod}}}%
+        {{hash=482aa8aa8e89982143642251226d079a}{%
+           family={Sibert},
+           familyi={S\bibinitperiod},
+           given={John},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Informa UK Limited}%
+      }
+      \strng{namehash}{1af528ba8396cf2b2e3188ccd32f012b}
+      \strng{fullhash}{0850670871fafcde2be31cd16703f9a4}
+      \strng{bibnamehash}{1af528ba8396cf2b2e3188ccd32f012b}
+      \strng{authorbibnamehash}{1af528ba8396cf2b2e3188ccd32f012b}
+      \strng{authornamehash}{1af528ba8396cf2b2e3188ccd32f012b}
+      \strng{authorfullhash}{0850670871fafcde2be31cd16703f9a4}
+      \field{sortinit}{F}
+      \field{sortinithash}{669c706c6f1fbf3b5a83d26f1d9e9e72}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1029-4937}
+      \field{journaltitle}{Optimization Methods and Software}
+      \field{month}{4}
+      \field{number}{2}
+      \field{title}{AD Model Builder: using automatic differentiation for statistical inference of highly parameterized complex nonlinear models}
+      \field{volume}{27}
+      \field{year}{2012}
+      \field{pages}{233\bibrangedash 249}
+      \range{pages}{17}
+      \verb{doi}
+      \verb 10.1080/10556788.2011.597854
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1080/10556788.2011.597854
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1080/10556788.2011.597854
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

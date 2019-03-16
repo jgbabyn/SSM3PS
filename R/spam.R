@@ -106,7 +106,7 @@ pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
 #' 
 #'
 #' @param surveys named list of surveys/catch to include, catch must be named catch in list
-#' @param landings data.frame of landings to include
+#' @param landings data.frame of landings to include with column for upper and lower censored bound multipliers
 #' @param stock_wt data.frame of stock weights
 #' @param midy_wt data.frame of midyear weights
 #' @param mat data.frame of maturity
@@ -117,12 +117,13 @@ pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
 #' @param idetect The survey detection limit
 #' @param cdetect The catch dectection limit
 #' @param naz.rm replaces NAs and zeros with dectection limits
+#' @param fit_landings fit landings and catch proportions instead of catch at age
+#' @param use_pe use process error?
+#' @param use_cye use catch year effects?
 #' 
-#'
 #' @export
 #'
-datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,
-                     cdetect=0.0005,naz.rm=TRUE){
+datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,cdetect=0.0005,naz.rm=TRUE,fit_landings=FALSE,use_pe=FALSE,use_cye=FALSE){
     if(is.null(ages)){
         ageL <- grep("Age",names(mat))
         ages <- as.numeric(gsub("Age","",names(mat)[ageL]))
@@ -194,7 +195,7 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
                            qname=rep(NA,nrow(landings)),iq=rep(NA,nrow(landings)),
                            ft=2,isurvey=rep(NA,nrow(landings)))
     surVec <- rbind(surVec,landings)
-    
+
 
     if(naz.rm==TRUE){
         surVec$index[is.na(surVec$index)] = 0
@@ -216,9 +217,13 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
         iq = surVec$iq,
         fs = surVec$fs,
         ft = surVec$ft,
-        index_censor = 0,
-        use_pe = 0,
-        use_cye = 0
+        index_censor = 2,
+        use_pe = ifelse(use_pe,1,0),
+        use_cye = ifelse(use_cye,1,0),
+        fit_land = ifelse(fit_landings,1,0),
+        lowerMult = landings$LB,
+        upperMult = landings$UB,
+        use_cb = 3
     )
 
     dat <- list()
@@ -230,7 +235,7 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
 
 #'Setup parameters
 #'
-#' @export
+#' 
 paramSetup <- function(dat){
     A = ncol(dat$mat)
     Y = nrow(dat$mat)
@@ -250,11 +255,20 @@ paramSetup <- function(dat){
         logit_ar_pe_age = -10,
         logit_ar_cye_year = 0,
         log_std_log_C = rep(log(0.3),A),
+        log_std_CRL = numeric(0),
+        log_std_landings = numeric(0),
         log_Rec_dev=rep(5,Y),
         log_F=matrix(log(0.3),nrow=Y,ncol=A),
         pe=matrix(0,nrow=Y,ncol=A),
         cye=matrix(0,nrow=Y,ncol=A)
     )
+    
+
+    if(dat$fit_land == 1){
+        parm$log_std_CRL = rep(0,A-1),
+        parm$log_std_landings = log(0.02)
+    }
+    
 
     parameters.L <- list( 
         log_No=rep(-Inf,A),
