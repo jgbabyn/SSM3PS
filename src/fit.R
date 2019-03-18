@@ -13,7 +13,7 @@ source("../data-raw/mdata3Ps.R")
 
 surveys = list(RVOff = surveys$RVOff,catch = surveys$catch)
 dat <- datSetup(surveys,landings,stock_wt,midy_wt,mat=mat,
-                age=3:16,years=1983:2015,plusGroup=14,naz.rm=TRUE)
+                age=3:16,years=1983:2015,plusGroup=14,naz.rm=TRUE,fit_landings=FALSE)
 
 indd <- dat$indices
 ##param <- paramSetup(dat)
@@ -31,10 +31,11 @@ ind = mapq %in% c(paste("OFF:",agep,sep=''),paste("IO:",agep,sep=''))
 mapq[ind] = paste("OFF:",rep('6+',9),sep='')
 
 param$param$log_qparm <- c(1,0.3,0.7,1,1,1,1,1,1,1,1,1)
+param$param$recParm = numeric(0)
 
 mapq = c(rep(0,12))
 mapN = list( 
-  log_qparm = factor(c(0,1,2,rep(NA,9))),
+  log_qparm = factor(c(1,2,2,2,2,2,rep(2,6))),
   log_std_logF = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
   log_std_log_C = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),          
   logit_ar_logF_age = factor(NA),              
@@ -50,9 +51,9 @@ mapN = list(
 
 ##Map for fitting landings right now
 mapL = list( 
-  log_qparm = factor(rep(NA,length(mapq))),
-  log_std_logF = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
-  log_std_log_C = factor(rep(NA,length(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")))),
+  log_qparm = factor(c(0,1,2,3,4,5,rep(6,6))),
+  log_std_logF = factor(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
+  log_std_log_C = factor(rep(NA,length(c("2","3","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")))),
   log_std_CRL = factor(c("4+","4+","4+","4+","4+","4+","4+","4+","4+","4+","4+")),
   logit_ar_logF_age = factor(NA),              
   logit_ar_logF_year = factor(NA), 
@@ -77,7 +78,7 @@ names(ff) <- names(obj$par)
 
 opt <- nlminb(obj$par,obj$fn,obj$gr,control=list(iter.max=500,eval.max=500))
 
-#osp <- oneStepPredict(obj,"log_index","keep",discrete=FALSE)
+osp <- oneStepPredict(obj,"log_index","keep",discrete=FALSE)
 rep2 <- obj$report()
 sd.rep2 <- sdreport(obj)
 

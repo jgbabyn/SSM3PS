@@ -31,7 +31,20 @@ matrix<Type> makeCRLs(matrix <Type > cProps){
   return crls;
 }
 
-      
+/*Beverton-Holt Recruitment function*/
+template<class Type>
+Type bHolt(vector <Type> SSBly,vector <Type> bhParm){
+  Type ret = bhParm(0) + log(SSBly) -log(1.0+exp(bhParm(1))*SSBly);
+  return ret;
+}
+
+/*Ricker recruitment function*/
+template<class Type>
+Type ricker(vector <Type> SSBly,vector <Type> rickParm){
+  Type ret = rickParm(0) + log(SSBly) - exp(rickParm(1))*SSBly;
+  return ret;
+}
+
   
 
 template<class Type>
@@ -100,6 +113,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(log_std_log_C);
   PARAMETER_VECTOR(log_std_CRL);
   PARAMETER_VECTOR(log_std_landings); //std. dev for landings, size 0 if fit_land=0, else 1
+  PARAMETER_VECTOR(recParm); //empty if not used, 0 alpha, 1 beta
 
   //Random Effects
   PARAMETER_VECTOR(log_Rec_dev);   
@@ -115,7 +129,6 @@ Type objective_function<Type>::operator() ()
   vector<Type> std_log_C = exp(log_std_log_C);
   vector<Type> std_CRL = exp(log_std_CRL);
   vector<Type> std_landings = exp(log_std_landings);
-  vector<Type> llog_qparm = exp(log_qparm)/(one+exp(log_qparm));
   
   Type ar_logF_age = exp(logit_ar_logF_age)/(one + exp(logit_ar_logF_age));    
   Type ar_logF_year = exp(logit_ar_logF_year)/(one + exp(logit_ar_logF_year)); 
@@ -265,6 +278,10 @@ Type objective_function<Type>::operator() ()
 	  log_index(i) = CRL(iy,ia);
 	  Elog_index(i) = ECRL(iy,ia);
 	  std_index_vec(i) = std_CRL(ia);
+	}else{
+	  //log_index(i) = NA_REAL;
+	  //Elog_index(i) = NA_REAL;
+	  //std_index_vec(i) = NA_REAL;
 	}
 	  
       }
@@ -311,8 +328,8 @@ Type objective_function<Type>::operator() ()
 	  break;
 	case basic:
 	  { //Forgot you can't normally declare vars in a switch, { } are workaround
-	    Type upb = log_index(i) + log(upperMult(i));
-	    Type lowb = log_index(i) + log(lowerMult(i));
+	    Type upb = log_index(i) + log(upperMult(iy));
+	    Type lowb = log_index(i) + log(lowerMult(iy));
 	    Type upbp = pnorm(upb,Elog_index(i),std_index_vec(i));
 	    Type lowbp = pnorm(lowb,Elog_index(i),std_index_vec(i));
 	    nll -= keep(i)*log(upbp-lowbp);
@@ -320,8 +337,8 @@ Type objective_function<Type>::operator() ()
 	  }
 	case stable: //Not really any better if Z > 40 which easily happens, so for illustration purposes?
 	  {
-	    Type upb = log_index(i) + log(upperMult(i));
-	    Type lowb = log_index(i) + log(lowerMult(i));
+	    Type upb = log_index(i) + log(upperMult(iy));
+	    Type lowb = log_index(i) + log(lowerMult(iy));
 	    Type upbp = pnorm4(upb,Elog_index(i),std_index_vec(i),true);
 	    Type lowbp = pnorm4(lowb,Elog_index(i),std_index_vec(i),true);
 	    nll -= keep(i)*logspace_sub(upbp,lowbp);
@@ -330,7 +347,7 @@ Type objective_function<Type>::operator() ()
 	case bounds: //The GOOD one
 	  //Yeah I subtract lower bounds in the atomic stuff so lower = -log(lowerMult), bleh
 	  //censored_bounds exists in pnorm4.hpp...
-	  nll -= keep(i)*censored_bounds(log_index(i),Elog_index(i),std_index_vec(i),-log(lowerMult(i)),log(upperMult(i)));
+	  nll -= keep(i)*censored_bounds(log_index(i),Elog_index(i),std_index_vec(i),-log(lowerMult(iy)),log(upperMult(iy)));
 	  break;
 	default:
 	  error("Unsupported use_cb type");

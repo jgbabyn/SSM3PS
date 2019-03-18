@@ -134,7 +134,10 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
         v
     }
 
-    
+    ##Change catch units
+    if(fit_landings == FALSE){
+        surveys$catch = surveys$catch/1000
+    }
     
     ##Handle the surveys into the indices
     surVec <- lapply(seq_along(surveys),function(x,nam,i){
