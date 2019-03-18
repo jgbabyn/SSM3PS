@@ -115,6 +115,7 @@ Type objective_function<Type>::operator() ()
   vector<Type> std_log_C = exp(log_std_log_C);
   vector<Type> std_CRL = exp(log_std_CRL);
   vector<Type> std_landings = exp(log_std_landings);
+  vector<Type> llog_qparm = exp(log_qparm)/(one+exp(log_qparm));
   
   Type ar_logF_age = exp(logit_ar_logF_age)/(one + exp(logit_ar_logF_age));    
   Type ar_logF_year = exp(logit_ar_logF_year)/(one + exp(logit_ar_logF_year)); 

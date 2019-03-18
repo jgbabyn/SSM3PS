@@ -6,12 +6,13 @@
 \usage{
 datSetup(surveys, landings, stock_wt, midy_wt, mat, M = 0.2,
   ages = NULL, years = NULL, plusGroup = NULL, idetect = 5e-04,
-  cdetect = 5e-04, match3NOdims = TRUE, naz.rm = TRUE)
+  cdetect = 5e-04, naz.rm = TRUE, fit_landings = FALSE,
+  use_pe = FALSE, use_cye = FALSE, use_Fcorr = FALSE)
 }
 \arguments{
 \item{surveys}{named list of surveys/catch to include, catch must be named catch in list}
 
-\item{landings}{data.frame of landings to include}
+\item{landings}{data.frame of landings to include with column for upper and lower censored bound multipliers}
 
 \item{stock_wt}{data.frame of stock weights}
 
@@ -30,6 +31,14 @@ datSetup(surveys, landings, stock_wt, midy_wt, mat, M = 0.2,
 \item{cdetect}{The catch dectection limit}
 
 \item{naz.rm}{replaces NAs and zeros with dectection limits}
+
+\item{fit_landings}{fit landings and catch proportions instead of catch at age}
+
+\item{use_pe}{use process error?}
+
+\item{use_cye}{use catch year effects?}
+
+\item{use_Fcorr}{use correlation in Fs?}
 
 \item{recType}{recruitment option}
 }

@@ -1,22 +1,3 @@
-
-#'create blank key structure
-#'
-#' Generate the blank key matrixces for filling
-#'
-#' @param numAges number of ages
-#' @param numFleets number of fleets
-#'
-#' @export
-keyGen <- function(numAges,numFleets){
-    ret <- list()
-    ret$keyF <- rep(NA,numAges)
-    ret$keyQ <- matrix(NA,nrow=numFleets,ncol=numAges)
-    ret$keySD <- matrix(NA,nrow=numFleets,ncol=numAges)
-    ret
-}
-
-
-    
 #'Fit the SPAM model
 #'
 #'
@@ -29,7 +10,7 @@ keyGen <- function(numAges,numFleets){
 #'
 spamFit <- function(data,parameters,map=list(),control=list(),lower=-Inf,upper=Inf,...){
 
-    obj <- TMB::MakeADFun(data,parameters,map=map,random=dat$random,...)
+    obj <- TMB::MakeADFun(data,parameters,map=map,random=data$random,...)
 
     opt <- nlminb(obj$par,obj,obj$gr,control=control,lower=lower,upper=upper)
 
@@ -49,7 +30,7 @@ spamFit <- function(data,parameters,map=list(),control=list(),lower=-Inf,upper=I
 #'Returns the loglikelihood of a spam object
 #'
 #' @param object the spam object to get the loglikelihood of
-#' 
+#' @export
 logLik.spam <- function(object,...)
 {
     val = -object$opt$objective
@@ -120,10 +101,11 @@ pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
 #' @param fit_landings fit landings and catch proportions instead of catch at age
 #' @param use_pe use process error?
 #' @param use_cye use catch year effects?
+#' @param use_Fcorr use correlation in Fs?
 #' 
 #' @export
 #'
-datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,cdetect=0.0005,naz.rm=TRUE,fit_landings=FALSE,use_pe=FALSE,use_cye=FALSE){
+datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,cdetect=0.0005,naz.rm=TRUE,fit_landings=FALSE,use_pe=FALSE,use_cye=FALSE,use_Fcorr=FALSE){
     if(is.null(ages)){
         ageL <- grep("Age",names(mat))
         ages <- as.numeric(gsub("Age","",names(mat)[ageL]))
@@ -188,6 +170,8 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
 
     landings$landings <- landings$landings/1000
     landings <- landings[landings$Year %in% years,]
+    UB = landings$UB
+    LB = landings$LB
     landings <- data.frame(Year=landings$Year,Age=rep(NA,nrow(landings)),
                            survey="landings",fs=rep(NA,nrow(landings)),
                            index = landings$landings,iage=rep(NA,nrow(landings)),
@@ -221,22 +205,22 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
         use_pe = ifelse(use_pe,1,0),
         use_cye = ifelse(use_cye,1,0),
         fit_land = ifelse(fit_landings,1,0),
-        lowerMult = landings$LB,
-        upperMult = landings$UB,
+        lowerMult = LB,
+        upperMult = UB,
         use_cb = 3
     )
 
     dat <- list()
     dat$data <- tmb.data
-    dat$param <- paramSetup(tmb.data)
+    dat$param <- paramSetup(tmb.data,use_Fcorr)
     dat$indices <- surVec
     dat
 }
 
 #'Setup parameters
 #'
-#' 
-paramSetup <- function(dat){
+#' @export
+paramSetup <- function(dat,use_Fcorr=FALSE){
     A = ncol(dat$mat)
     Y = nrow(dat$mat)
 
@@ -264,10 +248,76 @@ paramSetup <- function(dat){
     )
     
 
+    qparm_name = levels(as.factor(na.omit(dat$iq)))
+
+    mapq = qparm_name
+    agep = str_pad(6:14 , 2, pad = "0")
+
+    ind = mapq %in% c(paste("OFF:",agep,sep=''),paste("IO:",agep,sep=''))
+
+    mapq[ind] = paste("OFF:",rep('6+',9),sep='')
+
+    parm$log_qparm <- log(c(0.1,0.3,0.7,1,1,1,1,1,1,1,1,1,1))
+
+    map = list( 
+        log_qparm = factor(mapq),
+        log_std_logF = factor(c(0,1,rep(2,times=A-2))),
+        log_std_log_C = factor(c(0,1,rep(2,times=A-2))),          
+        logit_ar_logF_age = factor(NA),              
+        logit_ar_logF_year = factor(NA), 
+        log_std_pe=factor(NA),  
+        logit_ar_pe_year = factor(NA),     
+        logit_ar_pe_age = factor(NA),
+        pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
+        log_std_cye=factor(NA),  
+        logit_ar_cye_year = factor(NA),  
+        cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat)))
+    )
+
+    
+    
     if(dat$fit_land == 1){
-        parm$log_std_CRL = rep(0,A-1),
+        parm$log_std_CRL = rep(0,A-1)
         parm$log_std_landings = log(0.02)
+
+        map = list( 
+            log_qparm = factor(mapq),
+            log_std_logF = factor(c(0,1,rep(2,times=A-2))),
+            log_std_log_C = factor(rep(NA,A)),
+            log_std_CRL = factor(c(0,1,rep(2,times=A-3))),
+            logit_ar_logF_age = factor(NA),              
+            logit_ar_logF_year = factor(NA), 
+            log_std_pe=factor(NA),  
+            logit_ar_pe_year = factor(NA),     
+            logit_ar_pe_age = factor(NA),
+            pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
+            log_std_cye=factor(NA),  
+            logit_ar_cye_year = factor(NA),  
+            cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
+            log_std_landings = factor(NA)
+        )
+
+        }
+
+    if(dat$use_cye == 1){
+        map$log_std_cye = NULL
+        map$logit_ar_cye_year = NULL
+        map$cye = NULL
     }
+
+    if(dat$use_pe == 1){
+        map$log_std_pe = NULL
+        map$logit_ar_pe_year = NULL
+        map$logit_ar_pe_age = NULL
+        map$pe = NULL
+    }
+
+    if(use_Fcorr == TRUE){
+        map$logit_ar_logF_age = NULL
+        map$logit_ar_logF_year = NULL
+    }
+    
+            
     
 
     parameters.L <- list( 
@@ -307,7 +357,8 @@ paramSetup <- function(dat){
     ret <- list(
         param = parm,
         Lower = parameters.L,
-        Upper = parameters.U
+        Upper = parameters.U,
+        map = map
     )
 }
 

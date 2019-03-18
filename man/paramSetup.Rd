@@ -4,7 +4,7 @@
 \alias{paramSetup}
 \title{Setup parameters}
 \usage{
-paramSetup(dat)
+paramSetup(dat, use_Fcorr = FALSE)
 }
 \description{
 Setup parameters

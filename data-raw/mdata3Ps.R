@@ -4,9 +4,6 @@ library(lubridate)
 
 setwd("~/Documents/GitHub/SSM3PS/data-raw/data_EDA")
 
-possible.years = 1954:2019
-possible.years = factor(possible.years)
-
 ##landings
 cnames = c('Year','landings')
 landings = read.table(file='landings.dat',header=FALSE,col.names=cnames) %>%
@@ -177,6 +174,10 @@ names(fStock_wt) = c("Year",paste0("Age",1:16))
 fComm_wt <- data.frame(Year=comm_wt$Year)
 fComm_wt <- cbind(fComm_wt,fpcaComm_wt)
 names(fComm_wt) = c("Year",paste0("Age",1:16))
+fc2016 = apply(fComm_wt[fComm_wt$Year %in% 2012:2014,-1],2,median)
+ffComm_wt = rbind(fComm_wt,c(2015,fc2016))
+ffComm_wt = rbind(ffComm_wt,c(2016,fc2016))
+
 
 ##Now for Maturities!
 ##Squeeze to apply qlogis, so I can plogis on the return and ensure 0-1 bounds
@@ -198,5 +199,3 @@ fMat <- as.data.frame(fMat)
 
 names(fMat) <- c("Year",paste0("Age",1:16))
 
-matplot(t(fMat[fMat$Year %in% 1954:1978,-1]),type="l",col="blue")
-matplot(t(fMat[fMat$Year %in% 1978:2019,-1]),type="l",col="red",add=TRUE)
