@@ -1,0 +1,9 @@
+Pb
+- catch, pretty good buy cannot fit high catch of 61
+- probably overfitting the catch => make some keyLogFsta idq
+- ERHAPS fit: not really good, wt . significant YE in res
+- GEAC fit : not really good + significant YE in res
+- OFF fit: best on 3, significant YE in res
+
+- retro plot : clear trend. underestimating SSB and recruitment. for F it's changing along time
+
