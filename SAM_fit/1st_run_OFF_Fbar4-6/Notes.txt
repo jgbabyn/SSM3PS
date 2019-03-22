@@ -7,3 +7,6 @@ Pb
 
 - retro plot : clear trend. underestimating SSB and recruitment. for F it's changing along time
 
+- leave.out plot:
+----wo ERHAPS/OFF => ??F and ?? SSB and R => scale up nb of fish.
+----wo GEAC => ˜global.run,F? a bit and SSB and R? a bit
