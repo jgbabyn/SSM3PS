@@ -11,6 +11,8 @@ License: What license it uses
 Encoding: UTF-8
 LazyData: true
 LinkingTo: 
+    Rcpp,
+    RcppEigen,
     TMB
 Imports: 
     TMB,
@@ -18,7 +20,11 @@ Imports:
     tidyr,
     lattice,
     ggplot2,
-    ggpubr
+    ggpubr,
+    Rcpp,
+    RcppEigen,
+    ggcorrplot,
+    cowplot
 RoxygenNote: 6.1.1
 Suggests: 
     testthat

@@ -1,4 +1,54 @@
-\documentclass[11pt]{article}
+\documentclass[11pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[intoc,english]{nomencl}
@@ -12,7 +62,7 @@
 \usepackage{xcolor}
 \usepackage[toc,page]{appendix}
 \usepackage[acronym]{glossaries}
-\usepackage{listings}
+\
 \renewcommand{\nomname}{List of Abbreviations and Symbols Used}
 \makenomenclature
 \makeglossaries
@@ -46,12 +96,10 @@
 \specialcomment{Me}{\begingroup\ttfamily\color{red}}{\endgroup}
 %Control for the comments package
 %\excludecomment{DrF}
-
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
-<<setup,include=FALSE,tidy=TRUE,hide=TRUE>>=
 
-@
 
 
 \title{St. Pierre bank assessment model}
@@ -176,12 +224,11 @@ $\bm{F}$                        & Matrix of Fishing Mortality
 
 
 \section{Data Inputs} 
-
-The \acrshort{dfo} supplied In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall} and made available for everyone else in the class to use. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
+In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall}. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
 
 Due to the approach I opted to take with the landings, upper and lower bounds on the landings are required. I consulted with Danny Ings, head of 3Ps cod stock stock assessment at \acrshort{dfo}, he provided a set of periods with a general idea of how they relate to each other in width, but not exact bounds. These periods, along with the selection of landings bounds that were tried can be seen in Table \ref{landTable}. 
 
-As previously mentioned, since the raw catch proportions used to determine catch at age are not available, nor their sample sizes, the catch at age was converted to be catch proportions at age then to the catch \acrshort{crl}s used in the model. Ideally the raw catch proportions would be provided and their sample sizes known which would allow for other possibly better options of representing compositional data. 
+As previously mentioned, since the raw catch proportions used to determine catch at age are not available, nor their sample sizes, the catch at age was converted to be catch proportions at age then to the catch \acrshort{crl}s used in the model. Ideally the raw catch proportions would be provided and their sample sizes known which would allow for other 
 
 
 
@@ -208,7 +255,7 @@ Two important pieces for calculating \acrshort{ssb} are the weights used and mat
 
 For the maturities, the logit was taken and the \acrshort{fpca} performed in logit space to ensure that maturity proportions would continue to lie between 0 and 1 after smoothing. The FPCA was performed with each age group being considered an observation measured at each year. Smoothing was allowed on the mean function and a user selected bandwidth of 14 was chosen which removed many of the peaks and valleys. The diagnostic plots of the \acrshort{fpca} performed on the maturities showcasing the mean function, first three eigenfunctions, fraction of variance explained by each \acrshort{fpc} are seen in Figure \ref{fig:matFPCAd}. Over 90\% of the variance is explained by the first \acrshort{fpc}, because of this only the first \acrshort{fpc} was used in creating the smoothed data. Plots comparing the smoothed and raw versions of the maturities by age and year are in Figure \ref{matFPCAp}.
 
-For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. Danny Ings informed me that the 
+For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. 
 
 
 \begin{appendices}
@@ -280,29 +327,374 @@ $G(s,t)$ can be written in it's orthogonal expansion as
 
 \begin{appendices}
   \section{\texttt{C++} Code used}\label{Ccode}
-  \subsection{\texttt{fit.cpp} (Model Main)}
-  \lstset{language=C++,
-                basicstyle=\ttfamily,
-                keywordstyle=\color{blue}\ttfamily,
-                stringstyle=\color{red}\ttfamily,
-                commentstyle=\color{green}\ttfamily,
-                morecomment=[l][\color{magenta}]{\#},
-                breaklines=true,
-  				breakatwhitespace=true,
-  				tabsize=3
-	}
-	
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/fit.cpp}
-  \subsection{\texttt{pnorm4.hpp}}
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/pnorm4.hpp}
-  \subsection{\texttt{Fcorr.hpp}}
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/Fcorr.hpp}
-  \subsection{\texttt{MVMIX.hpp}}
-  This code was taken from the SAM github page as it supports OSA residuals and the current \texttt{MVNORM\_t} provided in \texttt{TMB} does not. The mixture probability was set to 0 in the model. It is also licensed as GPL-2 and thus fine for inclusion here.
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/MVMIX.hpp}
-  \subsection{\texttt{C++} code used outside model}
-  I decided it would be faster to simply convert the code I wrote to do \acrshort{crl}s inside the model for use in R when I had to switch from doing all the \acrshort{crl} related stuff inside the model to both inside and out for the sake of OSA residuals. This is just a version of makeCRLs that uses the Eigen library directly and does not take the log for the \acrshort{crl} as that's done later inside R. Using \texttt{sourceCpp} from \texttt{Rcpp} package these can be used as functions inside R. They are quick but have zero checks.
-  \subsection{\texttt{R} Code used}\label{Rcode}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#include <TMB.hpp>}
+\hlcom{#include "pnorm4.hpp"}
+\hlcom{#include "Fcorr.hpp"}
+\hlcom{#include "MVMIX.hpp"}
+
+//Convert a matrix to it's proportions by row
+template<class Type>
+matrix<Type>  \hlkwd{propM}(matrix <Type > M)\{
+int A = \hlkwd{M.cols}();
+int Y = \hlkwd{M.rows}();
+
+matrix<Type> \hlkwd{retM}(Y,A);
+
+\hlkwd{for}(int y = 0;y < Y;y++)\{
+  vector<Type> cy = \hlkwd{M.row}(y);
+  Type tot = \hlkwd{cy.sum}();
+  vector<Type> prop = cy/tot;
+  \hlkwd{retM.row}(y) = prop;
+\}
+
+return retM;
+\}
+
+/*Calculate population weighted average F for some set of ages
+ bAge is the beginning age to calculate average F over, eAge is the end Age.*/
+template<class Type>
+vector<Type> \hlkwd{aveF}(matrix<Type> F, matrix<Type> N, int bAge,int eAge)\{
+int Y = \hlkwd{F.rows}();
+int dist = (eAge-bAge)+1;
+matrix<Type> aveF = \hlkwd{F.array}()*\hlkwd{N.array}();
+//Get the block of the matrix starting at year 0 going to year Y, column of bAge extending the number of columns between eAge and bAge and take the sum rowwise.
+vector<Type> aveF_XY = \hlkwd{aveF.block}(0,bAge,Y,dist)\hlkwd{.rowwise}()\hlkwd{.sum}();
+vector<Type> tn = \hlkwd{N.block}(0,bAge,Y,dist)\hlkwd{.rowwise}()\hlkwd{.sum}();
+aveF_XY = aveF_XY/tn;
+return aveF_XY;
+
+\}
+
+
+/*Calculate CRLs from catch proportions*/
+template<class Type>
+matrix<Type> \hlkwd{makeCRLs}(matrix <Type > cProps)\{
+int A = \hlkwd{cProps.cols}();
+int Y = \hlkwd{cProps.rows}();
+
+matrix<Type> \hlkwd{crls}(Y,A-1);
+
+\hlkwd{for}(int a = 0; a < A-1;a++)\{
+  \hlkwd{for}(int y = 0; y < Y;y++)\{
+    vector<Type> cprow = \hlkwd{cProps.row}(y);
+    //get p_a+...+p_A
+    Type denom = \hlkwd{cprow.segment}(a,A-a)\hlkwd{.sum}();
+    Type num = \hlkwd{cProps}(y,a);
+    Type pi = num/denom;
+    \hlkwd{crls}(y,a) = \hlkwd{log}(pi/(1-pi));
+  \}
+\}
+
+return crls;
+\}
+
+/*Beverton-Holt Recruitment function*/
+template<class Type>
+Type \hlkwd{bHolt}(Type SSBly,vector <Type> bhParm)\{
+Type ret = \hlkwd{bhParm}(0) + \hlkwd{log}(SSBly) -\hlkwd{log}(1.0+\hlkwd{exp}(\hlkwd{bhParm}(1))*SSBly);
+return ret;
+\}
+
+/*Ricker recruitment function*/
+template<class Type>
+Type \hlkwd{ricker}(Type SSBly,vector <Type> rickParm)\{
+Type ret = \hlkwd{rickParm}(0) + \hlkwd{log}(SSBly) - \hlkwd{exp}(\hlkwd{rickParm}(1))*SSBly;
+return ret;
+\}
+
+//' Smooth Hockey Stick Recruitment Function
+template<class Type>
+Type \hlkwd{sHS}(Type SSBly,vector <Type> segParm,Type gammaSq)\{
+//Alpha and delta must be postive.
+Type delta = \hlkwd{exp}(\hlkwd{segParm}(1));
+Type alpha = \hlkwd{exp}(\hlkwd{segParm}(0));
+
+Type gm = gammaSq/4.0;
+Type sq1 = \hlkwd{sqrt}(delta*delta + gm);
+Type sq2 = \hlkwd{sqrt}((SSBly-delta)*(SSBly-delta) +gm);
+Type ret = \hlkwd{log}(alpha*(SSBly+sq1-sq2));
+return ret;
+\}
+
+
+template<class Type>
+Type objective_function<Type>::\hlkwd{operator}() ()
+\{
+enum fleetType \{
+  survey = 0,
+  Catch = 1,
+  land = 2
+\};
+
+enum recType \{
+  rw = 0,
+  bh = 1,
+  rick = 2,
+  smoothHS = 3
+\};
+  
+
+// input data;  
+\hlkwd{DATA_MATRIX}(M);
+\hlkwd{DATA_MATRIX}(weight); 
+\hlkwd{DATA_MATRIX}(mat); 
+\hlkwd{DATA_MATRIX}(midy_weight);
+\hlkwd{DATA_VECTOR}(log_index);
+\hlkwd{DATA_IVECTOR}(i_zero); //A lot of this could be put in one IMATRIX?
+\hlkwd{DATA_IVECTOR}(iyear);
+\hlkwd{DATA_IVECTOR}(iage);
+\hlkwd{DATA_IVECTOR}(isurvey);
+\hlkwd{DATA_IVECTOR}(iq);
+\hlkwd{DATA_VECTOR}(fs);
+\hlkwd{DATA_IVECTOR}(ft);
+\hlkwd{DATA_VECTOR}(lowerMult); //Lower multiplier for censored bounds
+\hlkwd{DATA_VECTOR}(upperMult); //Upper multiplier for censored bounds
+\hlkwd{DATA_IVECTOR}(keyF);
+\hlkwd{DATA_INTEGER}(recflag);
+\hlkwd{DATA_INTEGER}(corflag);
+\hlkwd{DATA_INTEGER}(corflagCRL);
+\hlkwd{DATA_SCALAR}(gammaSq); //For smoothHS recruitment function, controls smoothness of breakpoint
+\hlkwd{DATA_VECTOR}(crlVec); //Vector of Continuation Ratio Logits for catch
+\hlkwd{DATA_IVECTOR}(aveFages); //Ages in model ages to calculate average F over...0 bAge, 1 for eAge
+
+
+\hlkwd{DATA_VECTOR_INDICATOR}(keep,log_index); //Used for one step predict, does not need to be read in from R
+\hlkwd{DATA_VECTOR_INDICATOR}(keepCRL,crlVec);
+
+int n = \hlkwd{log_index.size}();
+
+int A = \hlkwd{mat.cols}();
+int Y = \hlkwd{mat.rows}();
+vector<Type> index = \hlkwd{exp}(log_index);
+
+//define parameters;  
+\hlkwd{PARAMETER}(log_std_log_R);
+\hlkwd{PARAMETER_VECTOR}(log_qparm);
+\hlkwd{PARAMETER_VECTOR}(log_std_index); 
+\hlkwd{PARAMETER_VECTOR}(log_std_logF);          
+\hlkwd{PARAMETER_VECTOR}(log_std_CRL);
+\hlkwd{PARAMETER_VECTOR}(log_std_landings); //std. dev for landings, size 0 if fit_land=0, else 1
+\hlkwd{PARAMETER}(log_sdS);
+\hlkwd{PARAMETER_VECTOR}(rec_parm);
+\hlkwd{PARAMETER_VECTOR}(tRhoF);
+\hlkwd{PARAMETER_VECTOR}(tRhoCRL);
+
+//Random Effects
+\hlkwd{PARAMETER_MATRIX}(log_F);    
+\hlkwd{PARAMETER_MATRIX}(log_N);
+
+Type std_log_R = \hlkwd{exp}(log_std_log_R); 
+vector<Type> std_index = \hlkwd{exp}(log_std_index);
+vector<Type> std_logF = \hlkwd{exp}(log_std_logF); 
+vector<Type> std_CRL = \hlkwd{exp}(log_std_CRL);
+vector<Type> std_landings = \hlkwd{exp}(log_std_landings);
+Type sdS = \hlkwd{exp}(log_sdS);
+  
+matrix<Type> \hlkwd{F}(Y,A);    
+matrix<Type> \hlkwd{Z}(Y,A);  
+matrix<Type> \hlkwd{EC}(Y,A);  
+matrix<Type> \hlkwd{ECW}(Y,A); 
+
+vector<Type> \hlkwd{Elog_index}(n); 
+vector<Type> \hlkwd{std_index_vec}(n);
+   
+//**********  start the engine ***************;
+
+using namespace density;
+Type nll = 0.0;  
+
+//compute F & Z
+\hlkwd{for}(int a = 0;a < A;++a)\{ 
+  \hlkwd{for}(int y = 0;y < Y;++y)\{
+    //keyF really cuts down on number of random parameters
+    \hlkwd{F}(y,a) = \hlkwd{exp}(\hlkwd{log_F}(y,\hlkwd{keyF}(a)));
+    \hlkwd{Z}(y,a) = \hlkwd{F}(y,a) + \hlkwd{M}(y,a);
+  \}
+\}
+
+matrix<Type> N = \hlkwd{log_N.array}()\hlkwd{.exp}();
+
+//Because of the magic from making log_N a parameter you can calculate SSB whenever you want.
+matrix<Type> B_matrix = \hlkwd{weight.array}()*\hlkwd{N.array}();
+matrix<Type> SSB_matrix = \hlkwd{mat.array}()*\hlkwd{B_matrix.array}();
+vector<Type> biomass = \hlkwd{B_matrix.rowwise}()\hlkwd{.sum}();
+vector<Type> ssb = \hlkwd{SSB_matrix.rowwise}()\hlkwd{.sum}();
+vector<Type> log_biomass = \hlkwd{log}(biomass);
+vector<Type> log_ssb = \hlkwd{log}(ssb);       
+
+
+
+//Recruitment, adding recruitment curves much easier because ssb is already available and will be optimized later
+Type predN;
+\hlkwd{for}(int y =1;y < Y;y++)\{
+  \hlkwd{switch}(recflag)\{
+  case rw:
+    predN = \hlkwd{log_N}(y-1,0);
+    break;
+  case bh:
+    predN = \hlkwd{bHolt}(\hlkwd{ssb}(y),rec_parm);
+    break;
+  case rick:
+    predN = \hlkwd{ricker}(\hlkwd{ssb}(y),rec_parm);
+    break;
+  case smoothHS:
+    predN = \hlkwd{sHS}(\hlkwd{ssb}(y),rec_parm,gammaSq);
+    break;
+  default:
+    \hlkwd{error}(\hlstr{"Not right rec type"});
+    break;
+  \}
+  
+  nll -= \hlkwd{dnorm}(\hlkwd{log_N}(y,0),predN,std_log_R,true);
+\}
+
+
+//Fill in N, add survival process
+\hlkwd{for}(int y = 1;y < Y;++y)\{
+  \hlkwd{for}(int a = 1;a < A;++a)\{
+    predN = \hlkwd{log_N}(y-1,a-1)-\hlkwd{Z}(y-1,a-1);
+    \hlkwd{if}(a == A-1)\{//Plus group
+	predN = \hlkwd{logspace_add}(predN,\hlkwd{log_N}(y-1,a)-\hlkwd{Z}(y-1,a));
+    \}
+    nll -= \hlkwd{dnorm}(\hlkwd{log_N}(y,a),predN,sdS,true);
+  \}
+\}
+
+//F correlation matrix making, sigmaFgen lives in Fcorr.hpp
+matrix<Type> sigmaF = \hlkwd{sigmaFgen}(\hlkwd{log_F.cols}(),corflag,log_std_logF,tRhoF);
+\hlkwd{REPORT}(sigmaF);
+
+//Add the F random walk to the likelihood.
+density::MVNORM_t<Type> \hlkwd{Fdens}(sigmaF);
+\hlkwd{for}(int y = 1; y < Y;y++)\{
+  nll += \hlkwd{Fdens}(\hlkwd{log_F.row}(y)-\hlkwd{log_F.row}(y-1));
+\}
+
+//Expected catch, for making expected catch CRLs
+//Expected landings too
+\hlkwd{for}(int y = 0;y <Y;y++)\{
+  \hlkwd{for}(int a = 0;a <A;a++)\{
+    \hlkwd{EC}(y,a) = \hlkwd{N}(y,a)*(1.0-\hlkwd{exp}(-1.0*\hlkwd{Z}(y,a)))*\hlkwd{F}(y,a)/\hlkwd{Z}(y,a);
+    \hlkwd{ECW}(y,a) = \hlkwd{EC}(y,a)*\hlkwd{midy_weight}(y,a);
+  \}
+\}
+
+vector<Type> landings_pred = \hlkwd{ECW.rowwise}()\hlkwd{.sum}();
+vector<Type> total_expected_catch = \hlkwd{EC.rowwise}()\hlkwd{.sum}();
+matrix<Type> log_EC = \hlkwd{EC.array}()\hlkwd{.log}();
+
+vector<Type> log_landings_pred = \hlkwd{log}(landings_pred);
+vector<Type> log_total_expected_catch = \hlkwd{log}(total_expected_catch);
+
+\hlkwd{REPORT}(log_landings_pred);
+\hlkwd{REPORT}(log_total_expected_catch);
+
+// Landings, Survey index predictions
+int ia,iy;
+\hlkwd{for}(int i = 0;i < n;++i)\{
+  int fType = \hlkwd{ft}(i);
+  ia = \hlkwd{iage}(i);
+  iy = \hlkwd{iyear}(i);
+
+  //Observation equations
+  \hlkwd{switch}(fType)\{
+  case survey:
+    \hlkwd{std_index_vec}(i) = \hlkwd{std_index}(\hlkwd{isurvey}(i));
+    \hlkwd{Elog_index}(i) = \hlkwd{log_qparm}(\hlkwd{iq}(i)) + \hlkwd{log_N}(iy,ia) - \hlkwd{fs}(i)*\hlkwd{Z}(iy,ia);
+    \hlkwd{if}(\hlkwd{i_zero}(i) == 1)\{ //if zero use left-censor bound
+	nll -= \hlkwd{keep}(i)*\hlkwd{pnorm4}(\hlkwd{log_index}(i),\hlkwd{Elog_index}(i),\hlkwd{std_index_vec}(i),true);
+    \}      
+    else\{
+	nll -= \hlkwd{keep}(i)*\hlkwd{dnorm}(\hlkwd{log_index}(i),\hlkwd{Elog_index}(i),\hlkwd{std_index_vec}(i),true);
+    \}
+    break;
+  case land:
+    \hlkwd{Elog_index}(i) = \hlkwd{log_landings_pred}(iy);
+    \hlkwd{std_index_vec}(i) = \hlkwd{std_landings}(0);
+    nll -= \hlkwd{keep}(i)*\hlkwd{censored_bounds}(\hlkwd{log_index}(i),\hlkwd{Elog_index}(i),\hlkwd{std_index_vec}(i),-\hlkwd{log}(\hlkwd{lowerMult}(iy)),\hlkwd{log}(\hlkwd{upperMult}(iy)));
+    break;
+  default:
+    \hlkwd{error}(\hlstr{"Fleet Type not implemented"});
+    break;
+  \}
+  
+\}
+
+matrix<Type> EPC = \hlkwd{propM}(EC);  //Expected Catch Proportions
+matrix<Type> ECRL = \hlkwd{makeCRLs}(EPC); //Expected Catch Continuation Ratio Logits
+
+matrix<Type> S = \hlkwd{propM}(F); //Selectivity F_\{y,a\}/(sum_\{a\}(F_\{y,a\}))
+
+\hlkwd{REPORT}(S);
+\hlkwd{REPORT}(EPC);
+\hlkwd{REPORT}(ECRL);
+
+//Correlation matrix for CRLs, might as well reuse sigmaFgen...
+matrix<Type> sigmaCRL = \hlkwd{sigmaFgen}(\hlkwd{ECRL.cols}(),corflagCRL,log_std_CRL,tRhoCRL);
+\hlkwd{REPORT}(sigmaCRL);
+
+//MV NORMAL MIXTURE distribution, second argument is the mixture probability, grabbed from SAM lives in MVMIX.hpp
+//MVNORM_t in TMB doesn't support OSA residuals yet, MVMIX_t from SAM does however there is a slight speed loss
+MVMIX_t<Type> \hlkwd{CRLdens}(sigmaCRL,0); //cause this is a MV MIXTURE duh. I could maybe actually try to use this part?
+\hlkwd{for}(int y = 0;y < Y;y++)\{
+  //IT'S VERY VERY IMPORTANT CATCH CRLs ARE SORTED YEAR THEN AGE HERE.
+  vector<Type> ECRLr = \hlkwd{ECRL.row}(y);
+  nll += \hlkwd{CRLdens}(\hlkwd{crlVec.segment}(y*(A-1),(A-1))-ECRLr,\hlkwd{keepCRL.segment}(y*(A-1),(A-1)));
+\}
+    
+    
+  
+//pop size weighted ave F;  
+
+vector<Type> aveFXY = \hlkwd{aveF}(F,N,\hlkwd{aveFages}(0),\hlkwd{aveFages}(1));
+vector<Type> log_aveFXY = \hlkwd{log}(aveFXY);
+
+\hlkwd{REPORT}(std_logF);      
+\hlkwd{REPORT}(std_log_R);  
+\hlkwd{REPORT}(std_index);  
+
+\hlkwd{REPORT}(N);          
+\hlkwd{REPORT}(F);                  
+\hlkwd{REPORT}(Z);                  
+\hlkwd{REPORT}(B_matrix);             
+\hlkwd{REPORT}(SSB_matrix);                
+\hlkwd{REPORT}(biomass);                  
+\hlkwd{REPORT}(ssb);            
+\hlkwd{REPORT}(aveFXY);              
+
+\hlkwd{REPORT}(EC);                          
+\hlkwd{REPORT}(ECW);        
+
+\hlkwd{REPORT}(landings_pred); 
+
+\hlkwd{REPORT}(Elog_index);
+
+\hlkwd{REPORT}(log_F);                    
+
+\hlkwd{REPORT}(log_std_index); 
+\hlkwd{REPORT}(log_qparm);
+
+\hlkwd{ADREPORT}(log_landings_pred);     
+\hlkwd{ADREPORT}(log_biomass);           
+\hlkwd{ADREPORT}(log_ssb);   
+\hlkwd{ADREPORT}(log_aveFXY);  
+\hlkwd{ADREPORT}(log_qparm);
+
+\hlkwd{ADREPORT}(std_logF);      
+\hlkwd{ADREPORT}(std_log_R);
+\hlkwd{ADREPORT}(std_index);  
+
+return nll;
+\}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\subsection{\texttt{R} Code used}\label{Rcode}
 	
 \end{appendices}
 

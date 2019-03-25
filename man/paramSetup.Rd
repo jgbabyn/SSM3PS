@@ -2,10 +2,10 @@
 % Please edit documentation in R/spam.R
 \name{paramSetup}
 \alias{paramSetup}
-\title{Setup parameters}
+\title{Basic Setup of parameters}
 \usage{
-paramSetup(dat, use_Fcorr = FALSE)
+paramSetup(dat)
 }
 \description{
-Setup parameters
+Basic Setup of parameters
 }

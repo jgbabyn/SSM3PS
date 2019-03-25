@@ -4,12 +4,12 @@
 \alias{spamFit}
 \title{Fit the SPAM model}
 \usage{
-spamFit(data, parameters, map = list(), control = list(),
-  lower = -Inf, upper = Inf, ...)
+spamFit(data, parameters, indices, cVec, random = NULL, map = list(),
+  control = list(), silent = TRUE, ...)
 }
 \arguments{
 \item{dat}{list of data and parameters from spamSetup}
 }
 \description{
-Fit the SPAM model
+Basic wrapper so I get a class to make things like AIC eaiser.
 }

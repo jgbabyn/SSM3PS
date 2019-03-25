@@ -4,14 +4,10 @@
 \alias{resid4plot}
 \title{Residuals by year, cohort, age and against expected values}
 \usage{
-resid4plot(rep, indices, oneStep = NULL)
+resid4plot(dat)
 }
 \arguments{
-\item{rep}{the report object containing the residuals}
-
-\item{indices}{the indices data frame}
-
-\item{oneStep}{optional oneStepPredict residuals to use instead}
+\item{resObj}{the report object containing the residuals}
 }
 \description{
 Returns a list containing all four ggplot objects which can then easily be combined with something like ggarrange.

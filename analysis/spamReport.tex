@@ -62,6 +62,7 @@
 \usepackage{xcolor}
 \usepackage[toc,page]{appendix}
 \usepackage[acronym]{glossaries}
+\usepackage{listings}
 \renewcommand{\nomname}{List of Abbreviations and Symbols Used}
 \makenomenclature
 \makeglossaries
@@ -82,6 +83,13 @@
 \newacronym{ssb}{SSB}{Spawning Stock Biomass}
 \newacronym{dfo}{DFO}{Fisheries and Oceans Canada}
 \newacronym{gcv}{GCV}{Generalized Cross Validation}
+\newacronym{ssm}{SSM}{State Space Model}
+\newacronym{mvn}{MVN}{Multivariate Normal}
+\newacronym{ncam}{NCAM}{Northern Cod Assessment Model}
+\newacronym{mnpt}{MNPT}{Mean Numbers Per Tow}
+\newacronym{crl}{CRL}{Continuation Ratio Logit}
+\newacronym{rv}{RV}{Research Vessel}
+\newacronym{geac}{GEAC}{Groundfish Enterprise Allocation Council}
 
 \specialcomment{DrF}{\begingroup\ttfamily\color{blue}}{\endgroup}
 
@@ -90,7 +98,6 @@
 %\excludecomment{DrF}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
-
 
 
 
@@ -108,69 +115,148 @@
 \section{Introduction}
 
 \section{Model Design}
+\subsection{Process Equations}
+The \acrfull{spam} is a state-space stock assessment model implemented in \acrfull{tmb}. As a \acrfull{ssm} the model can be separated into process equations and observation equations. \acrshort{spam} follows the same general process equations design as Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, with the log abundance at age $a$ in a given year $y$, $\log(N_{y,a})$ as 
+\begin{equation}\label{Nrec}
+\log(N_{y,R}) = \log(\text{SR})) + \eta_{y,R}, \quad \ \eta_{y,R} \sim \mathcal{N}(0,\sigma_R^2) \quad R < a ,
+\end{equation}
+\begin{equation}\label{Nsur}
+\log(N_{y,a}) = \log(N_{y-1,a-1}\exp(-Z_{y-1,a-1})) + \eta_{y,a}, \quad \eta_{y,a} \sim \mathcal{N}(0,\sigma_S^2) \quad R < a < A \quad \text{and}
+\end{equation}
+\begin{equation}\label{Nplus}
+\log(N_{y,A}) = \log(N_{y-1,a-1}\exp(-Z_{y-1,a-1})+N_{y-1,A}\exp(-Z_{A,y-1})) + \eta_{y,A} \quad \eta_{y,A} \sim \mathcal{N}(0,\sigma^2_S)
+\end{equation}
+with $Z_{y,a} = F_{y,a} + M_{y,a}$, where $F_{y,a}$ is mortality from fishing and natural mortaility $M_{y,a}$. Natural mortality was taken to be a fixed constant.
 
-\acrshort{spam} uses the standard population dynamics model for the abundance at age $a$ in year $y$ as,
-\begin{equation}\label{abun}
-  N_{a,y} = N_{a-1,y-1}\exp(-Z_{a-1,y-1})
+Equation \ref{Nrec} is the process of recruitment of cod to the fishery, $R$ is the first age included in the model and SR is some form of stock recruitment. \acrshort{spam} implements four different options for stock recruitment, 
+\begin{equation}\label{rw}
+	\text{Random Walk: } \text{SR} = N_{y,R} = N_{y-1,R} + \eta_{y,R}
 \end{equation}
-and extends it for the plus group $A$, comprising all fish at and above age $A$ with
-\begin{equation}\label{abunPlus}
-	N_{a,y} = N_{a-1,y-1}\exp(-Z_{a-1,y-1}) + N_{A,y-1}\exp(-Z_{A,y-1}).	
+\begin{equation}\label{ricker}
+	\text{Ricker: } \text{SR} = \alpha\text{SSB}\exp(-\beta\text{SSB})
 \end{equation}
-Total morality $Z_{a,y}$ was assumed to be of the form
+\begin{equation}\label{BH}
+\text{Beverton-Holt: } \text{SR} = \frac{\alpha\text{SSB}}{1+\beta\text(SSB)} \quad \text{and}  	
+\end{equation}
 \begin{equation}
-Z_{a,y} = F_{a,y} + M_{a,y},	
+	\text{Smooth HS: }\text{SR} = \alpha \bigg( \text{SSB} + \sqrt{\delta^2 + \frac{\gamma^2}{4}} 
+	- \sqrt{(\text{SSB} - \delta)^2 + \frac{\gamma^2}{4}}\bigg)
 \end{equation}
-with $F_{a,y}$ being fishing mortality and $M_{a,y}$ natural mortality which was fixed to be a constant 0.2.
-\section{Smoothing Maturities and Weights}
+where \acrshort{ssb} is \acrfull{ssb} and $\gamma^2$ is a fixed parameter that controls the smoothness of the breakpoint and was set equal to 0.1. Equations \ref{Nsur} \& \ref{Nplus} are the process of survival, and Equation \ref{Nplus} is an extension for a plus group of cod aged $A$ or older. The entire $\bm{N}$ abundance matrix is treated as random parameters to be integrated out of the model using the Laplace Approximation, this has the benefit of making adding internal stock recruitment models very simple as the calculation of \acrshort{ssb} can be done at any point in the model, as the values of $\bm{N}$ will be found during optimization. It also greatly reduces model run-time and the number of fixed effect parameters to estimate. Modelling survival as process error also has the benefit of allowing for immigration of fish into the stock of interest, which is something that may be relevant to 3Ps cod as stock mixing has been a concern\cite{methot2005spatio}\cite{rideout2017assessing}.
+
+Fishing mortality was also implemented the same way as in Nielsen \& Berg\cite{Nielsen2014Estimation-of-t}. For a given year of fishing mortality $\bm{F}_y=(F_{y,1},\dots,F_{y,A})'$ is a \acrfull{mvn} random walk, 
+
+\begin{equation}
+	\log(\bm{F}_y) = \log(\bm{F}_{y-1}) + \xi_y, \quad \xi_y \sim MVN(\bm{0},\bm{\Sigma_F})
+\end{equation}, with $\bm{\Sigma_F}$ being the covariance matrix. This implementation allows for time varying selectivity, with selectivity being defined as $S_{y,a} = \frac{F_{y,a}}{\sum_{a}F_{a,y}}$\cite{Nielsen2014Estimation-of-t}. Since the 3Ps cod fishery has seen a shift in gear types over time, most notably a move away from otter trawls and cod traps to gillnet, time varying selectivity can help deal with this. As in Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, the same four covariance options were implemented. A fifth covariance option was also added which allows for a different correlation $\rho_a$ for each age. This was mainly done with the intention of making fishing mortality in age 2 cod uncorrelated with older fish, e.g. $\rho_2=0$. Table \ref{sigTab} illustrates the different covariance matrix options available in \acrshort{spam}.
+
+\begin{table}[]
+\begin{tabular}{lllll}
+Name & Off-diagonal elements &\\ \hline
+Independent & $\bm{\Sigma}_{a,\tilde a} = 0$ &\\
+Parallel    & $\bm{\Sigma}_{a,\tilde a} = \sigma_a\sigma_{\tilde a}$                             &\\
+Compound    & $\bm{\Sigma}_{a,\tilde a} = \rho\sigma_a\sigma_{\tilde a}$                              &\\
+AR(1)       & $\bm{\Sigma}_{a,\tilde a} = \rho^{|a-\tilde a|}\sigma_a\sigma_{\tilde a}$                            & \\
+Custom      & $\bm{\Sigma}_{a,\tilde a} = \rho_a\rho_{\tilde a}\sigma_a\sigma_{\tilde a}$                             & 
+\end{tabular}
+\caption{Covariance matrix options available in \acrshort{spam} for ages $a$, $a \neq \tilde a$, independent is uncorrelated between ages and the process will develop independently in time, parallel is like $\rho=1$ and is the same as the assumption of constant selectivity, compound has all the age groups develop correlated in time the same, AR(1) has all the processes be correlated as function of the distance between ages, so closer ages are more closely related. Custom allows having ages have their own correlation parameter.}
+\label{sigTab} 
+\end{table} 
+
+\subsection{Observation Equations}
+\acrshort{spam} incorporates data from multiple different research vessel surveys, catch at age proportions and reported landings. For the survey indices $I_{y,a,s}$, which are reported as \acrfull{mnpt}, the value predicted by the model is 
+\begin{equation}
+	\log(\hat{I}_{y,a,s}) = \log(q_{a,s}) + \log(N_{y,a}) - t_{s,y}Z_{y,a}
+\end{equation}
+where $q_{a,s}$ is the catch-ability parameter for survey $s$ for age $a$, and $t_{s,y}$ is the median date of the survey during the year in decimal form. As in the \acrfull{ncam} currently used for assessment for northern cod, \acrshort{spam} sets a survey detection limit of 0.0005, with the belief that the cod are there, just in not large enough numbers to be detected by the survey\cite{Cadigan2016A-state-space-s}. This says that the data is left censored. $I_{y,a,s} > 0.0005$ are added to the log-likelihood as
+\begin{equation}
+\sum_a\sum_y \log\bigg(\varphi\bigg(\frac{\log(I_{y,a,s})-\log(\hat{I}_{y,a,s}])}{\sigma_{s,I}	}\bigg)\bigg)
+\end{equation}
+where $\varphi$ is the \acrshort{pdf} of the standard normal distribution and $\sigma_{s,I}$ is the standard deviation of the survey index for survey $s$. Indices that fall below the detection limit are added to the likelihood as
+\begin{equation}\label{surBound}
+\sum_a\sum_y \log\bigg(\Phi\bigg(\frac{\log(I_{y,a,s})-\log(\hat{I}_{y,a,s})}{\sigma_{s,I}	}\bigg)\bigg)	
+\end{equation}
+with $\Phi$ being the \acrfull{cdf} of the standard normal distribution.
+
+\acrshort{spam} calculates the expected catch $C$ in the model using the Baranov catch equation,
+\begin{equation}
+	\hat{C}_{y,a} = N_{y,a}(1-\exp(-Z_{y,a}))\frac{F_{y,a}}{Z_{y,a}}.
+\end{equation}
+It does not fit directly to $\hat{C}$ but instead to the expected \acrfull{crl} of the catch proportions at age for a given year, $\bm{\hat{X}}_y$. \acrshort{crl} are defined as $P(Y = a | a \geq a) = \text{logit}(\pi_a)$ where $\pi_a = \frac{p_a}{p_a+\dots+p_A}$ and $p_a$ is proportion of catch at age $a$. Using \acrshort{crl}s allows for fitting on catch proportions but does not require knowing or assuming the sampling sizes used to determine the catch proportions. It does require having non-zero catch proportions and small values were added to the observed zero catch proportions, and these were used to create the observed \acrshort{crl}, $\bm{X}_y$. The observed \acrshort{crl} are assumed be distributed as
+\begin{equation}
+	\bm{X}_y \sim MVN(\hat{\bm{X}}_y,\bm{\Sigma}_{CRL})
+\end{equation}
+where $\bm{\Sigma}_{CRL}$ can be any one of the same covariance matrix options presented in Table \ref{sigTab} allowing for a correlation structure between ages.
+
+Since \acrshort{spam} fits catch proportions instead of catch at age, a third element is needed to fix the the magnitudes of abundance. The reported landings that were provided were used to do this. This was done in a similar fashion to how it is outlined in the \acrshort{ncam} paper, except instead of fitting to expected total catch for the year versus the observed total catch, this was instead done on the expected landings versus the observed landings. This was done since earlier catch at age calculations have been speculated to not include fish older than age 14 rather than their just be zero catch at those ages, whereas reported landings would and thus total observed catch would be under-reporting. The landings are added to the log-likelihood in the model as
+\begin{equation}\label{landBound}
+\sum_y \log\bigg\{\Phi\bigg(\frac{\log(L_y) + \log(UB)	- \log(\hat{L}_y)}{\sigma_L}\bigg)-\Phi\bigg(\frac{\log(L_y) + \log(LB)	- \log(\hat{L}_y)}{\sigma_L}\bigg)\bigg\}
+\end{equation}
+where $L_y$ and $\hat{L_y}$ are the observed and predicted landings respectively, $UB$ and $LB$ are upper and lower bound multipliers on what the reported landings actually were. This is similar to Equation 7 of the \acrshort{ncam} paper. There it was noted that there can be issues optimizing the likelihood with this sort of formulation and there a mixture distribution and judicious choices of starting parameters were used to overcome them\cite{Cadigan2016A-state-space-s}. I instead opted to fix the problem directly by writing atomic functions for \acrshort{tmb} that manually defines the derivatives for Equations \ref{surBound} \& \ref{landBound} in a more numerically stable manner. This process is described in Appendix \ref{astable1}. This allows for \acrshort{spam} to be run with a wide variety of starting values and without the need for upper or lower bounds on parameters or the need to run the model twice to find reasonable starting values. For the same reason outlined in Cadigan (2016)\cite{Cadigan2016A-state-space-s}, $\sigma_L$ is fixed to be $\log(0.02)$ to prevent $\hat{L}_y$ from escaping the bounds too often or exceeding them by too much. 
+
+
+The parameters estimated, including optional parameters by \acrshort{spam} are noted in Table \ref{paramTable}.
+
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{ll}
+ Fixed Parameters                       & Description                                                                            \\ \hline
+$\sigma_R$                      & Std. Dev. of Recruitment Process                                                       \\
+$\sigma_S$                      & Std. Dev. of Survival Process                                                          \\
+$\bm{\sigma}_{s,I}$             & Vector of Std. Dev. of survey indices                                                  \\
+$\bm{\sigma}_{F}$               & Vector of Std. Dev. for fishing mortality                                              \\
+$\rho_F$($\bm{\rho}_F$)         & Correlation parameter for $\bm{\Sigma}_F$(Vector if custom type,0 if independent)      \\
+$\bm{\sigma}_{CRL}$             & Vector of Std. Dev. for CRLs.                                                          \\
+$\rho_{CRL}$($\bm{\rho}_{CRL}$) & Correlation parameter for $\bm{\Sigma}_{CRL}$(Vector if custom type, 0 if independent) \\
+$\bm{q}$                        & Vector of catchability parameters for the survey indices                               \\
+$\alpha$                        & Optional parameter used in the three stock recruitment functions                       \\
+$\beta$                         & Optional parameter used in the Ricker and Beverton-Holt stock recruitment functions    \\
+$\delta$                        & Optional parameter used in the smooth hockey stick recruitment function                \\ \hline
+Random Parameters               & \\ \hline
+$\bm{N}$                        & Matrix of Abundance \\
+$\bm{F}$                        & Matrix of Fishing Mortality
+\end{tabular}
+}
+\caption{Mandatory and optional fixed effect parameters estimated in \acrshort{spam} followed by random parameters estimated.}
+\label{paramTable}
+\end{table}
+
+
+\section{Data Inputs} 
+In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall}. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
+
+Due to the approach I opted to take with the landings, upper and lower bounds on the landings are required. I consulted with Danny Ings, head of 3Ps cod stock stock assessment at \acrshort{dfo}, he provided a set of periods with a general idea of how they relate to each other in width, but not exact bounds. These periods, along with the selection of landings bounds that were tried can be seen in Table \ref{landTable}. 
+
+As previously mentioned, since the raw catch proportions used to determine catch at age are not available, nor their sample sizes, the catch at age was converted to be catch proportions at age then to the catch \acrshort{crl}s used in the model. Ideally the raw catch proportions would be provided and their sample sizes known which would allow for other possibly better options of representing compositional data. 
+
+
+
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
+Period                        & Danny Ings' Description                           & Tight       & Medium      & Wide        \\ \hline
+1959-1993                     & Somewhat wide                                  & (0.75,1.25) & (0.5,1.5)   & (0.35,1.75) \\
+1994-1996                     & Narrow                                         & (0.95,1.05) & (0.90,1.10) & (0.80,1.20) \\
+1997-1998(or 1997-1999)       & Very Wide                                      & (0.5,1.5)   & (0.35,1.75) & (0.25,2.0)  \\
+1999-present(or 2000-present) & Narrower than 1959-1993 but wider than 1994-96 & (0.85,1.15) & (0.75,1.25) & (0.5,1.5)  
+\end{tabular}%
+}
+\caption{The periods for landing bounds provided by Danny Ings, along with the description of how they relate and three sets of different upper and lower bound multipliers to be tested on \acrshort{spam}.}
+\label{landTable}
+\end{table}
+
+\subsection{Smoothing Maturities and Weights}
 
 Two important pieces for calculating \acrshort{ssb} are the weights used and maturity ogives. The maturity ogives provided are the output of a logistic regression run and updated each year from fish that have had their otoliths aged, lengths measured and maturity status determined. This results in very noisy maturity data set for each age group. For both the commercial and stock weights, output from a cohort model going from 1983 to 2016 were provided, along with commercial and stock weights from 1959 to 2014 and 1959 to 2017 respectively provided by \acrshort{dfo}. The weights provided by \acrshort{dfo} are noisy, and values prior to 1977 are identical and likely copy and pasted from some mean weights derived at some point. Neither of these situations are ideal. The weights either need to be extended thirty back into the past or improved. While the \acrshort{dfo} provided weights unfortunately do not have real observations prior to 1977, the values provided at least seem consistent when compared with the output of the cohort model weights. I chose to try and deal with the noise in the \acrshort{dfo} provided weights rather than extend the other weights back as the \acrshort{dfo} weights are based on actual commercial sampling efforts rather than being based off research vessel survey data and weight length relationships.
 
  Both the maturities and weights were smoothed using \acrfull{fpca}. \acrshort{fpca} is a non-parametric technique that has been used to perform noise reduction on curve like data\cite{ramsay2007applied}. \acrshort{fpca} has at least been at least applied to fisheries data in the context of evaluating spatio-temporal patterns in the data\cite{embling_2012} but it has not to the author's knowledge been applied to fisheries weight or growth data. The noise reduction is done by breaking the data down into it's mean function $\mu(t)$, eigenfunctions $\phi_k(t)$ and \acrfull{fpc}, $\xi_{ki}$ and keeping only the number of \acrshort{fpc}s that explain most of the variation in the data.  Further details on \acrshort{fpca} and this process can be seen in Appendix \ref{afpca}.
 
-
-
 For the maturities, the logit was taken and the \acrshort{fpca} performed in logit space to ensure that maturity proportions would continue to lie between 0 and 1 after smoothing. The FPCA was performed with each age group being considered an observation measured at each year. Smoothing was allowed on the mean function and a user selected bandwidth of 14 was chosen which removed many of the peaks and valleys. The diagnostic plots of the \acrshort{fpca} performed on the maturities showcasing the mean function, first three eigenfunctions, fraction of variance explained by each \acrshort{fpc} are seen in Figure \ref{fig:matFPCAd}. Over 90\% of the variance is explained by the first \acrshort{fpc}, because of this only the first \acrshort{fpc} was used in creating the smoothed data. Plots comparing the smoothed and raw versions of the maturities by age and year are in Figure \ref{matFPCAp}.
 
-For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}, the diagnostic plots for the stock weights look very similar and are not included here. On the weights data, again over 90\% of the variation is explained by a single \acrshort{fpc}. Looking at the data represented with a single \acrshort{fpc} revealed a distinct gap between the bulk of the data. This gap almost perfectly separates the weights into pre-1994 and post-1994 groups, with a further more obvious recent downshift in weights that occurred after 2011. This grouping along with plots of the raw and smoothed weights are shown in Figure \ref{fig:weightFPCAp}. A k-means with $k=3$ clustering algorithm was also applied to the \acrshort{fpc}s of the weights to try and find groupings that way. With the repeated data from 1977 prior removed, almost the same groups as seen in Figure \ref{fig:weightFPCAp} were found on the commercial data and groups that mostly split the stock weight data into pre-1994 and post-1994 clusters..
+For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. 
 
- The \acrshort{dfo} provided weights were only provided for ages three through fourteen and needed to be extended for ages 1,2, 15 and 16. This was done by extrapolating the mean function and eigenfunctions of the \acrshort{fpca} using splines at those points. While extrapolating beyond the boundaries is not ideal, the mean function and the first eigenfunction seem well behaved at the boundaries and the imputed values seem reasonable. 
-
-
-
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
-\includegraphics[width=\maxwidth]{figure/matFPCAd-1} \caption[Diagnostic plots the FPCA performed on maturity proportions]{Diagnostic plots the FPCA performed on maturity proportions. Top right shows the smoothed mean function, bottom right shows the first 3 eigenfunctions, bottom left the fraction of variance explained by each FPC, top left is the number of measurements at each grid point}\label{fig:matFPCAd}
-\end{figure}
-
-
-\end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
-\includegraphics[width=\maxwidth]{figure/matFPCAp-1} \caption[Raw and smoothed maturity proportion curves both by age and by year]{Raw and smoothed maturity proportion curves both by age and by year. For the proportions by age, red curves are those post-1980, blue are pre-1980 suggesting later cohorts mature faster.}\label{fig:matFPCAp}
-\end{figure}
-
-
-\end{knitrout}
-
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
-\includegraphics[width=\maxwidth]{figure/weightFPCAd-1} \caption[Diagnostic plots of the FPCA performed on the commercial weights]{Diagnostic plots of the FPCA performed on the commercial weights.}\label{fig:weightFPCAd}
-\end{figure}
-
-
-\end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
-\includegraphics[width=\maxwidth]{figure/weightFPCAp-1} \caption[Raw DFO provided commercial weights vs]{Raw DFO provided commercial weights vs. those smoothed by FPCA. Blue curves are those pre-1994, Red are post-1994 and orange are post-2011. Ages 2,3,15 and 16 weights were created by extrapolating the mean function and eigenfunctions to those points using splines and then imputing based on those extrapolations.}\label{fig:weightFPCAp}
-\end{figure}
-
-
-\end{knitrout}
 
 \begin{appendices}
 \section{Numerically stable logged normal cumulative distribution function derivatives in TMB}\label{astable1}
@@ -238,5 +324,34 @@ $G(s,t)$ can be written in it's orthogonal expansion as
 
 
 \printbibliography
+
+\begin{appendices}
+  \section{\texttt{C++} Code used}\label{Ccode}
+  \subsection{\texttt{fit.cpp} (Model Main)}
+  \lstset{language=C++,
+                basicstyle=\ttfamily,
+                keywordstyle=\color{blue}\ttfamily,
+                stringstyle=\color{red}\ttfamily,
+                commentstyle=\color{green}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#},
+                breaklines=true,
+  				breakatwhitespace=true,
+  				tabsize=3
+	}
+	
+  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/fit.cpp}
+  \subsection{\texttt{pnorm4.hpp}}
+  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/pnorm4.hpp}
+  \subsection{\texttt{Fcorr.hpp}}
+  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/Fcorr.hpp}
+  \subsection{\texttt{MVMIX.hpp}}
+  This code was taken from the SAM github page as it supports OSA residuals and the current \texttt{MVNORM\_t} provided in \texttt{TMB} does not. The mixture probability was set to 0 in the model. It is also licensed as GPL-2 and thus fine for inclusion here.
+  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/MVMIX.hpp}
+  \subsection{\texttt{C++} code used outside model}
+  I decided it would be faster to simply convert the code I wrote to do \acrshort{crl}s inside the model for use in R when I had to switch from doing all the \acrshort{crl} related stuff inside the model to both inside and out for the sake of OSA residuals. This is just a version of makeCRLs that uses the Eigen library directly and does not take the log for the \acrshort{crl} as that's done later inside R. Using \texttt{sourceCpp} from \texttt{Rcpp} package these can be used as functions inside R. They are quick but have zero checks.
+  \subsection{\texttt{R} Code used}\label{Rcode}
+	
+\end{appendices}
+
 
 \end{document}

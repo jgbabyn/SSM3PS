@@ -5,7 +5,7 @@
 \title{Plot line graph with confidence interval from sd.report object}
 \usage{
 tsCIplot(sName, sd.rep, years, alpha = 0.05, exp = FALSE,
-  add = FALSE, color = "black", fcolor = "grey70")
+  add = FALSE, color = "black", fcolor = "grey70", relYear = NULL)
 }
 \arguments{
 \item{sName}{the name of the series to plot}
@@ -23,6 +23,8 @@ tsCIplot(sName, sd.rep, years, alpha = 0.05, exp = FALSE,
 \item{color}{the color of the line}
 
 \item{fcolor}{the color of the confidence interval}
+
+\item{relYear}{year for everything else to be relative to}
 }
 \description{
 Given a name of something in an sd.report object and the number of corresponding

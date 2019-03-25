@@ -6,8 +6,7 @@
 \usage{
 datSetup(surveys, landings, stock_wt, midy_wt, mat, M = 0.2,
   ages = NULL, years = NULL, plusGroup = NULL, idetect = 5e-04,
-  cdetect = 5e-04, naz.rm = TRUE, fit_landings = FALSE,
-  use_pe = FALSE, use_cye = FALSE, use_Fcorr = FALSE)
+  aveFages = c(1, 3))
 }
 \arguments{
 \item{surveys}{named list of surveys/catch to include, catch must be named catch in list}
@@ -27,18 +26,6 @@ datSetup(surveys, landings, stock_wt, midy_wt, mat, M = 0.2,
 \item{plusGroup}{optional age to specify as a plus group, indices are summed by that age and weights taken to be the mean of ages in plus group}
 
 \item{idetect}{The survey detection limit}
-
-\item{cdetect}{The catch dectection limit}
-
-\item{naz.rm}{replaces NAs and zeros with dectection limits}
-
-\item{fit_landings}{fit landings and catch proportions instead of catch at age}
-
-\item{use_pe}{use process error?}
-
-\item{use_cye}{use catch year effects?}
-
-\item{use_Fcorr}{use correlation in Fs?}
 
 \item{recType}{recruitment option}
 }

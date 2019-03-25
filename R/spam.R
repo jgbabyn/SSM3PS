@@ -1,28 +1,35 @@
 #'Fit the SPAM model
 #'
+#' Basic wrapper so I get a class to make things like AIC eaiser.
 #'
 #' @param dat list of data and parameters from spamSetup
 #'
 #'
-#' @useDynLib 'SSM3PS'
+#' @useDynLib 'fit'
 #' 
 #' @export
 #'
-spamFit <- function(data,parameters,map=list(),control=list(),lower=-Inf,upper=Inf,...){
+spamFit <- function(data,parameters,indices,cVec,random=NULL,map=list(),control=list(),silent=TRUE,...){
 
-    obj <- TMB::MakeADFun(data,parameters,map=map,random=data$random,...)
+    obj <- TMB::MakeADFun(data,parameters,map=map,random=random,silent=silent,...)
 
-    opt <- nlminb(obj$par,obj,obj$gr,control=control,lower=lower,upper=upper)
+    opt <- nlminb(obj$par,obj$fn,obj$gr,control=control)
 
     fit <- list()
 
     fit$dat <- data
+    fit$parameters <- parameters
+    fit$map = map
     fit$obj <- obj
     fit$opt <- opt
     fit$rep <- obj$report()
-    fit$sdr <- TMB::sdreport()
+    fit$sdr <- TMB::sdreport(fit$obj)
+    fit$indices = indices
+    fit$cVec = cVec
+    
 
     class(fit) <- "spam"
+    print(opt$message)
     fit
 }
 
@@ -35,10 +42,32 @@ logLik.spam <- function(object,...)
 {
     val = -object$opt$objective
     attr(val,"df") = length(object$opt$par)
-    attr(val,"nobs") = length(object$dat$data$obs)
+    attr(val,"nobs") = length(c(object$dat$log_index,object$dat$crlVec))
     class(val) = "logLik"
     val
 }
+
+#'Returns the one step ahead residuals of a spam object and some other stuff for plotting
+#'
+#' @param object the spam object
+#' @param method the one step ahead residuals to use
+#' @param ... options to give oneStepPredict
+#'
+#' @export
+residuals.spam <- function(object,method="oneStepGaussianOffMode",...){
+    ospIL = TMB::oneStepPredict(object$obj,"log_index","keep",discrete=FALSE,method=method,...)
+    ospCRL = TMB::oneStepPredict(object$obj,"crlVec","keepCRL",discrete=FALSE,method=method,...)
+
+    ##Add crud for plotting
+    ospIL = cbind(ospIL,Age=object$indices$Age,survey=object$indices$survey,Year=object$indices$Year,EV=object$rep$Elog_index,
+                  i_zero=object$indices$i_zero)
+    ospCRL = cbind(ospCRL,Age=object$cVec$Age,survey=object$cVec$survey,Year=object$cVec$Year,EV=as.vector(t(object$rep$ECRL)),
+                   i_zero=object$cVec$i_zero)
+    ret = rbind(ospIL,ospCRL)
+    ret
+}
+
+
 
 #'Helper function for generating plusGroup information
 pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
@@ -96,16 +125,14 @@ pGroup <- function(x,plusGroup,sOrM="survey",ages,years){
 #' @param years optional vector of years to include
 #' @param plusGroup optional age to specify as a plus group, indices are summed by that age and weights taken to be the mean of ages in plus group
 #' @param idetect The survey detection limit
-#' @param cdetect The catch dectection limit
-#' @param naz.rm replaces NAs and zeros with dectection limits
-#' @param fit_landings fit landings and catch proportions instead of catch at age
-#' @param use_pe use process error?
-#' @param use_cye use catch year effects?
-#' @param use_Fcorr use correlation in Fs?
+#'
+#' @importFrom Rcpp sourceCpp
+#'
+#' @useDynLib SSM3PS
 #' 
 #' @export
 #'
-datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,cdetect=0.0005,naz.rm=TRUE,fit_landings=FALSE,use_pe=FALSE,use_cye=FALSE,use_Fcorr=FALSE){
+datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years=NULL,plusGroup=NULL,idetect=0.0005,aveFages=c(1,3)){
     if(is.null(ages)){
         ageL <- grep("Age",names(mat))
         ages <- as.numeric(gsub("Age","",names(mat)[ageL]))
@@ -133,12 +160,7 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
         v$Age <- as.numeric(gsub("Age","",v$Age))
         v
     }
-
-    ##Change catch units
-    if(fit_landings == FALSE){
-        surveys$catch = surveys$catch/1000
-    }
-    
+                
     ##Handle the surveys into the indices
     surVec <- lapply(seq_along(surveys),function(x,nam,i){
         ageL <- grep("Age",names(x[[i]]))
@@ -160,7 +182,6 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
                                   TRUE ~ 0L) ##Otherwise it's a survey
     surVec$isurvey <- ifelse(surVec$survey == "catch" | surVec$survey == "landings",NA,surVec$survey)
     surVec$isurvey <- as.numeric(factor(surVec$isurvey))-1
-    
 
     ##Setup for the plus group...
     matVec <- vMake(mat)
@@ -182,15 +203,28 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
                            qname=rep(NA,nrow(landings)),iq=rep(NA,nrow(landings)),
                            ft=2,isurvey=rep(NA,nrow(landings)))
     surVec <- rbind(surVec,landings)
-
-
-    if(naz.rm==TRUE){
-        surVec$index[is.na(surVec$index)] = 0
-        surVec$index[surVec$index < idetect] = idetect
-        }
-        
     
+    surVec$index[is.na(surVec$index)] = 0
+    surVec$index[surVec$index < idetect] = idetect
+    surVec$index[surVec$survey == "catch"] = surVec$index[surVec$survey == "catch"]/1000
 
+    cVec = surVec[surVec$survey == "catch",]
+    surVec = surVec[surVec$survey != "catch",]
+    catt = cVec[,c("index","Age","Year")]
+    catt = tidyr::spread(catt,"Age","index")
+    cprop = t(apply(catt[,-1],1,catchProp))
+    crls = makeCRLs(cprop)
+    crls = as.data.frame(cbind(years,crls))
+    a2 = sort(unique(cVec$Age))
+    a2 = a2[1:(length(a2)-1)]
+    names(crls) = c("Year",paste0("Age",a2))
+    crls = tidyr::gather(crls,"Age","index",-Year)
+    crls$Age = as.numeric(gsub("Age","",crls$Age))
+    cVec$index = NULL
+    crls = dplyr::left_join(crls,cVec)
+    crls = dplyr::arrange(crls,iyear,iage) ##Sorted for my shitty hack
+    ##surVec = rbind(crls,surVec)
+    
     tmb.data <- list(
         M = M,
         weight = pStock,
@@ -204,165 +238,48 @@ datSetup <- function(surveys,landings,stock_wt,midy_wt,mat,M=0.2,ages=NULL,years
         iq = surVec$iq,
         fs = surVec$fs,
         ft = surVec$ft,
-        index_censor = 2,
-        use_pe = ifelse(use_pe,1,0),
-        use_cye = ifelse(use_cye,1,0),
-        fit_land = ifelse(fit_landings,1,0),
         lowerMult = LB,
         upperMult = UB,
-        use_cb = 3
-    )
+        keyF = rep(0,length(unique(na.omit(surVec$iage)))),
+        recflag = 0,
+        corflag = 0,
+        corflagCRL = 0,
+        gammaSq = 0.1,
+        crlVec = log(crls$index),
+        aveFages = aveFages
+        )
+    
 
     dat <- list()
     dat$data <- tmb.data
-    dat$param <- paramSetup(tmb.data,use_Fcorr)
+    dat$param <- paramSetup(tmb.data)
     dat$indices <- surVec
+    dat$crls <- crls
     dat
 }
 
-#'Setup parameters
+#'Basic Setup of parameters
 #'
 #' @export
-paramSetup <- function(dat,use_Fcorr=FALSE){
+paramSetup <- function(dat){
     A = ncol(dat$mat)
     Y = nrow(dat$mat)
 
     parm <- list(
-        log_No=rep(log(1),A-1),
-        log_Rec_mean = 5,
         log_std_log_R = 0,
         log_qparm=rep(0,length(unique(na.omit(dat$iq)))),
         log_std_index=rep(log(0.3),length(unique(na.omit(dat$isurvey)))),
-        log_std_logF = rep(log(0.1),A),
-        log_std_pe = log(0.1),
-        log_std_cye = log(0.5),
-        logit_ar_logF_year = log(0.99/0.01),
-        logit_ar_logF_age = -10,
-        logit_ar_pe_year = -10,
-        logit_ar_pe_age = -10,
-        logit_ar_cye_year = 0,
-        log_std_log_C = rep(log(0.3),A),
-        log_std_CRL = numeric(0),
-        log_std_landings = numeric(0),
-        log_Rec_dev=rep(5,Y),
-        log_F=matrix(log(0.3),nrow=Y,ncol=A),
-        pe=matrix(0,nrow=Y,ncol=A),
-        cye=matrix(0,nrow=Y,ncol=A)
+        log_std_logF = rep(log(0.1),length(unique(dat$keyF))),
+        log_std_CRL = rep(0,A-1),
+        log_std_landings = log(0.02),
+        log_sdS = 0,
+        rec_parm = numeric(0),
+        log_F=matrix(log(0.3),nrow=Y,ncol=length(unique(dat$keyF))),
+        log_N = matrix(0,nrow=Y,ncol=A)
     )
     
 
-    qparm_name = levels(as.factor(na.omit(dat$iq)))
-
-    mapq = qparm_name
-    agep = str_pad(6:14 , 2, pad = "0")
-
-    ind = mapq %in% c(paste("OFF:",agep,sep=''),paste("IO:",agep,sep=''))
-
-    mapq[ind] = paste("OFF:",rep('6+',9),sep='')
-
-    parm$log_qparm <- log(c(0.1,0.3,0.7,1,1,1,1,1,1,1,1,1,1))
-
-    map = list( 
-        log_qparm = factor(mapq),
-        log_std_logF = factor(c(0,1,rep(2,times=A-2))),
-        log_std_log_C = factor(c(0,1,rep(2,times=A-2))),          
-        logit_ar_logF_age = factor(NA),              
-        logit_ar_logF_year = factor(NA), 
-        log_std_pe=factor(NA),  
-        logit_ar_pe_year = factor(NA),     
-        logit_ar_pe_age = factor(NA),
-        pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
-        log_std_cye=factor(NA),  
-        logit_ar_cye_year = factor(NA),  
-        cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat)))
-    )
-
-    
-    
-    if(dat$fit_land == 1){
-        parm$log_std_CRL = rep(0,A-1)
-        parm$log_std_landings = log(0.02)
-
-        map = list( 
-            log_qparm = factor(mapq),
-            log_std_logF = factor(c(0,1,rep(2,times=A-2))),
-            log_std_log_C = factor(rep(NA,A)),
-            log_std_CRL = factor(c(0,1,rep(2,times=A-3))),
-            logit_ar_logF_age = factor(NA),              
-            logit_ar_logF_year = factor(NA), 
-            log_std_pe=factor(NA),  
-            logit_ar_pe_year = factor(NA),     
-            logit_ar_pe_age = factor(NA),
-            pe=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
-            log_std_cye=factor(NA),  
-            logit_ar_cye_year = factor(NA),  
-            cye=factor(matrix(NA,nrow=nrow(dat$mat),ncol=ncol(dat$mat))),
-            log_std_landings = factor(NA)
-        )
-
-        }
-
-    if(dat$use_cye == 1){
-        map$log_std_cye = NULL
-        map$logit_ar_cye_year = NULL
-        map$cye = NULL
-    }
-
-    if(dat$use_pe == 1){
-        map$log_std_pe = NULL
-        map$logit_ar_pe_year = NULL
-        map$logit_ar_pe_age = NULL
-        map$pe = NULL
-    }
-
-    if(use_Fcorr == TRUE){
-        map$logit_ar_logF_age = NULL
-        map$logit_ar_logF_year = NULL
-    }
-    
-            
-    
-
-    parameters.L <- list( 
-        log_No=rep(-Inf,A),
-        log_Rec_mean=0,    
-        log_std_log_R=-5,   
-        log_qparm=rep(-Inf,length(unique(dat$iq))),
-        log_std_index=rep(log(0.01),length(unique(dat$isurvey))), 
-        log_std_logF = rep(-Inf,A),  
-        log_std_pe = -Inf,      
-        log_std_cye = -Inf,                 
-        logit_ar_logF_year = -Inf, 
-        logit_ar_logF_age = -Inf,            
-        logit_ar_pe_year = -Inf, 
-        logit_ar_pe_age = -Inf, 
-        logit_ar_cye_year = -Inf, 
-        log_std_log_C = rep(-Inf,A)          
-    )            
-
-    parameters.U <- list(
-        log_No=rep(log(4000),A-1),
-        log_Rec_mean=50,    
-        log_std_log_R=5,    
-        log_qparm=rep(Inf,length(unique(dat$iq))),
-        log_std_index=rep(log(2),length(unique(dat$isurvey))), 
-        log_std_logF = rep(Inf,A),  
-        log_std_pe = log(0.5),      
-        log_std_cye = Inf,                 
-        logit_ar_logF_year = log(0.99/0.01), 
-        logit_ar_logF_age = log(0.99/0.01),            
-        logit_ar_pe_year = log(0.99/0.01), 
-        logit_ar_pe_age = log(0.99/0.01), 
-        logit_ar_cye_year = log(0.99/0.01), 
-        log_std_log_C = rep(Inf,A)      
-    )
-
-    ret <- list(
-        param = parm,
-        Lower = parameters.L,
-        Upper = parameters.U,
-        map = map
-    )
+    parm
 }
 
     
