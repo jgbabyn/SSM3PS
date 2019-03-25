@@ -39,8 +39,8 @@ matrix<Type> sigmaFgen(int nage,int corrFlag, vector<Type> logsdF,vector<Type> t
     sigma.diagonal() = sdF*sdF;
     for(int i=0; i < nage; i++){
       for(int j=0; j < i; j++){
-	//Anders explained this is needed to get parallel to coverge.
-	sigma(i,j) = 0.99999*sdF(i)*sdF(j);
+	//Anders explained this is needed to get parallel to coverge. VERY PICKY ON NUMBER OF 0.999
+	sigma(i,j) = 0.999*sdF(i)*sdF(j);
 	sigma(j,i) = sigma(i,j);
       }
     }

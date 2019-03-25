@@ -19,12 +19,12 @@ param$log_qparm = rep(0,length(unique(na.omit(data$iq))))
 
 data$keyF = c(0,1,2,3,4,rep(5,13-5))
 #data$keyF = c(0:4,5,5,5,5,5,5,5,5)
-data$corflag = 3
+data$corflag = 0
 data$corflagCRL = 0
 param$log_std_logF = rep(0,length(unique(data$keyF)))
 param$log_F = matrix(0,nrow=nrow(data$mat),ncol=length(param$log_std_logF))
 param$rec_parm = numeric(0);
-param$tRhoF = c(0.1)
+param$tRhoF = numeric(0);
 ##param$param$tRhoF = c(0,0.0000000001,0.000000001,0.00000001)
 param$tRhoCRL = numeric(0)
 
@@ -38,7 +38,7 @@ mapL = list(
 
 )
 
-fitt <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),map=mapL,control=list(iter.max=500,eval.max=500))
+qqq <- system.time(fitt <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),map=mapL,control=list(iter.max=500,eval.max=500)))
 
 qPat <- qPattern(fitt$sdr,fitt$indices)
 
@@ -53,3 +53,68 @@ lland[,-1] = log(lland[,-1])
 landB <- oneStopPlot(resi,"landings")
 
 
+modelOpts <- expand.grid(cfF=0:4,cfCRL=0:4,rf=0:3)
+modelOpts$time <- NA
+modelOpts$AIC <- NA
+modelOpts$BIC <- NA
+modelOpts$logLik <- NA
+modelOpts$message <- NA
+
+for(i in 75:nrow(modelOpts)){
+    tempD <- data
+    tempP <- param
+    tempM <- mapL
+
+    cfF = modelOpts$cfF[i]
+    cfCRL = modelOpts$cfCRL[i]
+    rf = modelOpts$rf[i]
+    
+    tempD$corflag = cfF
+    tempD$corflagCRL = cfCRL
+    tempD$recflag = rf
+
+    ##Parmeters for F correlation
+    if(cfF == 0 | cfF == 1){
+        tempP$tRhoF = numeric(0)
+    }
+    if(cfF == 2 | cfF == 3){
+        tempP$tRhoF = 0.1
+    }
+    if(cfF == 4){
+        tempP$tRhoF = c(0,rep(0.1,5))
+        tempM$tRhoF = factor(c(NA,0,1,2,3,4))
+    }
+
+    ##CRL corr params
+    if(cfCRL == 0 | cfCRL == 1){
+        tempP$tRhoCRL = numeric(0)
+    }
+    if(cfCRL == 2 | cfCRL == 3){
+        tempP$tRhoCRL = 0.1
+    }
+    if(cfCRL == 4){
+        tempP$tRhoCRL = c(0,rep(0.1,11))
+        tempM$tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5)))
+    }
+
+    ##rec param
+    if(rf != 0){
+        tempP$rec_parm = c(0,0)
+    }
+    
+    time <- system.time(tempF <- spamFit(tempD,tempP,indi,crls,random=c("log_N","log_F"),sdrep=FALSE,map=tempM,control=list(iter.max=500,eval.max=500)))
+
+    modelOpts$time[i] = time[3]
+    modelOpts$AIC[i] = AIC(tempF)
+    modelOpts$BIC[i] = BIC(tempF)
+    modelOpts$logLik[i] = logLik(tempF)
+    modelOpts$message[i] = tempF$opt$message
+    print(i)
+}
+
+RCmo <- modelOpts[modelOpts$message == "relative convergence (4)",]
+RCmo <- dplyr::arrange(RCmo,AIC,BIC)
+FCmo <- modelOpts[modelOpts$message == "false convergence (8)",]
+SCmo <- modelOpts[modelOpts$message == "singular convergence (7)",]
+
+usethis::use_data(modelOpts)

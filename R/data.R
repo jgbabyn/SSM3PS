@@ -7,3 +7,10 @@
 #'
 #'
 "rDat"
+
+#'Result of running the model 100 times with every possible user configurable option
+#'
+#' This is a table containing the AIC,BIC, time taken, likelihood, convergence message of
+#' running SPAM 100 times on a specfic set parameters, this was done with every possible option
+#' of correlation type for F and CRL along with the different recruitment curve options
+"modelOpts"

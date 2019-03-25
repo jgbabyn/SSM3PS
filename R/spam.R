@@ -9,7 +9,7 @@
 #' 
 #' @export
 #'
-spamFit <- function(data,parameters,indices,cVec,random=NULL,map=list(),control=list(),silent=TRUE,...){
+spamFit <- function(data,parameters,indices,cVec,random=NULL,map=list(),control=list(),silent=TRUE,sdrep=TRUE,...){
 
     obj <- TMB::MakeADFun(data,parameters,map=map,random=random,silent=silent,...)
 
@@ -23,7 +23,10 @@ spamFit <- function(data,parameters,indices,cVec,random=NULL,map=list(),control=
     fit$obj <- obj
     fit$opt <- opt
     fit$rep <- obj$report()
-    fit$sdr <- TMB::sdreport(fit$obj)
+    if(sdrep == TRUE){
+        fit$sdr <- TMB::sdreport(fit$obj)
+    }
+    
     fit$indices = indices
     fit$cVec = cVec
     
