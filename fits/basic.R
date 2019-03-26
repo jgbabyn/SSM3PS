@@ -60,7 +60,7 @@ modelOpts$BIC <- NA
 modelOpts$logLik <- NA
 modelOpts$message <- NA
 
-for(i in 75:nrow(modelOpts)){
+for(i in 1:nrow(modelOpts)){
     tempD <- data
     tempP <- param
     tempM <- mapL
@@ -85,7 +85,7 @@ for(i in 75:nrow(modelOpts)){
         tempM$tRhoF = factor(c(NA,0,1,2,3,4))
     }
 
-    ##CRL corr params
+    ##Crl corr params
     if(cfCRL == 0 | cfCRL == 1){
         tempP$tRhoCRL = numeric(0)
     }
@@ -94,7 +94,7 @@ for(i in 75:nrow(modelOpts)){
     }
     if(cfCRL == 4){
         tempP$tRhoCRL = c(0,rep(0.1,11))
-        tempM$tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5)))
+        Tempm$tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5)))
     }
 
     ##rec param
@@ -117,4 +117,4 @@ RCmo <- dplyr::arrange(RCmo,AIC,BIC)
 FCmo <- modelOpts[modelOpts$message == "false convergence (8)",]
 SCmo <- modelOpts[modelOpts$message == "singular convergence (7)",]
 
-usethis::use_data(modelOpts)
+usethis::use_data(modelOpts,overwrite=TRUE)

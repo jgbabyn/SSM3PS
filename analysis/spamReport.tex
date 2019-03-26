@@ -90,6 +90,9 @@
 \newacronym{crl}{CRL}{Continuation Ratio Logit}
 \newacronym{rv}{RV}{Research Vessel}
 \newacronym{geac}{GEAC}{Groundfish Enterprise Allocation Council}
+\newacronym{nafo}{NAFO}{Northwest Atlantic Fisheries Organization}
+\newacronym{aic}{AIC}{Akaike Information Criterion}
+\newacronym{bic}{BIC}{Bayesian Information Criterion}
 
 \specialcomment{DrF}{\begingroup\ttfamily\color{blue}}{\endgroup}
 
@@ -114,6 +117,9 @@
 
 \section{Introduction}
 
+The cod stock in \acrfull{nafo} subdivision 3Ps is the last commerical cod fishery open in Newfoundland. \acrshort{nafo} subdivsion 3Ps is located off the southern coast of Newfoundland containing the French Overseas Collectivity of Saint Pierre \& Miquelon is located partially on St. Pierre bank. The cod stock there is jointly managed by the French and Canadian governments. The stock is currently considered to be in the cautious zone by \acrshort{dfo} as of January 2017\cite{rideout2017assessing}.
+
+Currently the stock assessment model for 3Ps is a survey based model referred to as SURBA written by Noel Cadigan that has been in use since 2010\cite{cadigan2010trends}. Since SURBA is a survey based model it only incorporates information from surveys such as \acrfull{dfo}'s multispecies \acrfull{rv} bottom trawl survey that has occurred almost every year in 3Ps since 1972\cite{doubleday1981manual}. The current 3Ps stock assessment model also relies on data solely from \acrshort{dfo}'s \acrshort{rv} survey from 1983 onwards and not from the French survey that was performed from 1978 to 1992, the industry backed survey by the \acrfull{geac} that occured in the area from 1997 to 2007, or the stil ongoing sentinel survey that started in 1995. Some of these surveys have been involved in past assessment models but have not been used recently\cite{brattey2005assessment}.  
 \section{Model Design}
 \subsection{Process Equations}
 The \acrfull{spam} is a state-space stock assessment model implemented in \acrfull{tmb}. As a \acrfull{ssm} the model can be separated into process equations and observation equations. \acrshort{spam} follows the same general process equations design as Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, with the log abundance at age $a$ in a given year $y$, $\log(N_{y,a})$ as 
@@ -224,7 +230,9 @@ $\bm{F}$                        & Matrix of Fishing Mortality
 
 
 \section{Data Inputs} 
-In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall}. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
+Catch, surveys, landings, weights and maturities were used from 1959 to 2016 if available. The assessment here is run on data ranging from ages 2 to 16 with 14 and up comprising a plus group. For the plus group I used the sum for the catch and survey indices for ages 14 to 16 and the mean for the weights and maturities.
+
+The \acrshort{dfo} supplied \acrshort{rv} surveys started in 1983 and continue to run to this day. In 1997 the survey was extended to add more inshore strata. I decided to treat the \acrshort{dfo} survey from 1983-1996 with offshore indices only as one survey, and the 1997 onwards inshore plus offshore strata as another. In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall} and made available for everyone else in the class to use. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
 
 Due to the approach I opted to take with the landings, upper and lower bounds on the landings are required. I consulted with Danny Ings, head of 3Ps cod stock stock assessment at \acrshort{dfo}, he provided a set of periods with a general idea of how they relate to each other in width, but not exact bounds. These periods, along with the selection of landings bounds that were tried can be seen in Table \ref{landTable}. 
 
@@ -249,13 +257,25 @@ Period                        & Danny Ings' Description                         
 
 \subsection{Smoothing Maturities and Weights}
 
-Two important pieces for calculating \acrshort{ssb} are the weights used and maturity ogives. The maturity ogives provided are the output of a logistic regression run and updated each year from fish that have had their otoliths aged, lengths measured and maturity status determined. This results in very noisy maturity data set for each age group. For both the commercial and stock weights, output from a cohort model going from 1983 to 2016 were provided, along with commercial and stock weights from 1959 to 2014 and 1959 to 2017 respectively provided by \acrshort{dfo}. The weights provided by \acrshort{dfo} are noisy, and values prior to 1977 are identical and likely copy and pasted from some mean weights derived at some point. Neither of these situations are ideal. The weights either need to be extended thirty back into the past or improved. While the \acrshort{dfo} provided weights unfortunately do not have real observations prior to 1977, the values provided at least seem consistent when compared with the output of the cohort model weights. I chose to try and deal with the noise in the \acrshort{dfo} provided weights rather than extend the other weights back as the \acrshort{dfo} weights are based on actual commercial sampling efforts rather than being based off research vessel survey data and weight length relationships.
+Two important pieces for the model are the weights used and maturity ogives. The maturity ogives provided are the output of a logistic regression run and updated each year from fish that have had their otoliths aged, lengths measured and maturity status determined. This results in very noisy maturity data set for each age group. For both the commercial and stock weights, output from a cohort model going from 1983 to 2016 were provided, along with commercial and stock weights from 1959 to 2014 and 1959 to 2017 respectively provided by \acrshort{dfo}. The weights provided by \acrshort{dfo} are noisy, and values prior to 1977 are identical and likely copy and pasted from some mean weights derived at some point. Neither of these situations are ideal. The weights either need to be extended thirty back into the past or improved. While the \acrshort{dfo} provided weights unfortunately do not have real observations prior to 1977, the values provided at least seem consistent when compared with the output of the cohort model weights. I chose to try and deal with the noise in the \acrshort{dfo} provided weights rather than extend the other weights back as the \acrshort{dfo} weights are based on actual commercial sampling efforts rather than being based off research vessel survey data.
 
  Both the maturities and weights were smoothed using \acrfull{fpca}. \acrshort{fpca} is a non-parametric technique that has been used to perform noise reduction on curve like data\cite{ramsay2007applied}. \acrshort{fpca} has at least been at least applied to fisheries data in the context of evaluating spatio-temporal patterns in the data\cite{embling_2012} but it has not to the author's knowledge been applied to fisheries weight or growth data. The noise reduction is done by breaking the data down into it's mean function $\mu(t)$, eigenfunctions $\phi_k(t)$ and \acrfull{fpc}, $\xi_{ki}$ and keeping only the number of \acrshort{fpc}s that explain most of the variation in the data.  Further details on \acrshort{fpca} and this process can be seen in Appendix \ref{afpca}.
 
 For the maturities, the logit was taken and the \acrshort{fpca} performed in logit space to ensure that maturity proportions would continue to lie between 0 and 1 after smoothing. The FPCA was performed with each age group being considered an observation measured at each year. Smoothing was allowed on the mean function and a user selected bandwidth of 14 was chosen which removed many of the peaks and valleys. The diagnostic plots of the \acrshort{fpca} performed on the maturities showcasing the mean function, first three eigenfunctions, fraction of variance explained by each \acrshort{fpc} are seen in Figure \ref{fig:matFPCAd}. Over 90\% of the variance is explained by the first \acrshort{fpc}, because of this only the first \acrshort{fpc} was used in creating the smoothed data. Plots comparing the smoothed and raw versions of the maturities by age and year are in Figure \ref{matFPCAp}.
 
-For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. 
+For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. Looking at the smoothed commerical weights I noticed that the main bulk of the data appeared to be broken into two groups and could be mostly split into data pre and post 1994. This trend is also noticable in the original data but not as clearly. There was a shift in gear types towards gillnets in 3Ps in 1994, however that should result in the opposite trend with commercial weights increasing if this was the cause. Low sampling numbers would most likely not explain this either, as a $20+$ year sustained downward bias would be unlikely. There is the possibility that there has been a change in how the aging has been done either with pre-1994 cod otolith readers underestimating ages or post-1994 readers overestimating ages. This change also occurs during the period when the stock collapsed and it is possible that this is somehow related as well. Danny Ings told me \acrshort{dfo} is aware of the issue but is not sure of the exact cause either when I consulted him about it.  
+
+
+Danny Ings also informed me that the provided \acrshort{dfo} stock weights are just model back calculations of the commercial weights. I decided to move the smoothed commerical weights back half of a year in time and use those as the stock weights for the model. This is effectively just shifting them down the curve. 
+
+\section{Model Analysis}
+
+
+
+There are too many possible options in \acrshort{spam} to evaluate all of them directly. To narrow down a set of candidate model options, I ran \acrshort{spam} once for every possible option of covariance matrix for the $\bm{F}_y$ random walk and the catch \acrshort{crl}s along with the four possible recruitment options on a single specified mapping of vector parameters shown in table \ref{candTable}. The \acrfull{aic}, \acrfull{bic}, log-likelihood, time elapsed and convergence status were recorded. 66 of the 100 model runs resulted in relative convergance while the remaining 44 resulted in false or singular convergence and were removed from contention. The top performing models were those that used the custom correlation structure for both the $\bm{F}_y$ random walk and the catch \acrshort{crl}s, note that $\rho_2$ was explictly fixed to be equal to 0 in both cases.
+
+
+
 
 
 \begin{appendices}
@@ -339,17 +359,24 @@ $G(s,t)$ can be written in it's orthogonal expansion as
   				tabsize=3
 	}
 	
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/fit.cpp}
+  \lstinputlisting[language=C++]{~/Documents/GitHub/SSM3PS/src/TMB/fit.cpp}
   \subsection{\texttt{pnorm4.hpp}}
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/pnorm4.hpp}
+  \lstinputlisting[language=C++]{~/Documents/GitHub/SSM3PS/src/TMB/pnorm4.hpp}
   \subsection{\texttt{Fcorr.hpp}}
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/Fcorr.hpp}
+  \lstinputlisting[language=C++]{~/Documents/GitHub/SSM3PS/src/TMB/Fcorr.hpp}
   \subsection{\texttt{MVMIX.hpp}}
   This code was taken from the SAM github page as it supports OSA residuals and the current \texttt{MVNORM\_t} provided in \texttt{TMB} does not. The mixture probability was set to 0 in the model. It is also licensed as GPL-2 and thus fine for inclusion here.
-  \lstinputlisting[language=C++]{/Users/jonathanbabyn/Dropbox/workingOk/MVMIX.hpp}
+  \lstinputlisting[language=C++]{~/Documents/GitHub/SSM3PS/src/TMB/MVMIX.hpp}
   \subsection{\texttt{C++} code used outside model}
-  I decided it would be faster to simply convert the code I wrote to do \acrshort{crl}s inside the model for use in R when I had to switch from doing all the \acrshort{crl} related stuff inside the model to both inside and out for the sake of OSA residuals. This is just a version of makeCRLs that uses the Eigen library directly and does not take the log for the \acrshort{crl} as that's done later inside R. Using \texttt{sourceCpp} from \texttt{Rcpp} package these can be used as functions inside R. They are quick but have zero checks.
+  I decided it would be faster to simply convert the code I wrote to do \acrshort{crl}s inside the model for use in R when I had to switch from doing all the \acrshort{crl} related stuff inside the model to both inside and out for the sake of OSA residuals. This is just a version of makeCRLs that uses the Eigen library directly and does not take the log for the \acrshort{crl} as that's done later inside R. Using the \texttt{Rcpp} package these can be used as functions inside R. They are quick but have zero checks.
+  \lstinputlisting[language=C++]{~/Documents/GitHub/SSM3PS/src/gross.cpp}
   \subsection{\texttt{R} Code used}\label{Rcode}
+  \subsubsection{\texttt{spam.R}}
+        
+              
+                              
+  
+                              
 	
 \end{appendices}
 

@@ -5,7 +5,7 @@
 \title{Fit the SPAM model}
 \usage{
 spamFit(data, parameters, indices, cVec, random = NULL, map = list(),
-  control = list(), silent = TRUE, ...)
+  control = list(), silent = TRUE, sdrep = TRUE, ...)
 }
 \arguments{
 \item{dat}{list of data and parameters from spamSetup}

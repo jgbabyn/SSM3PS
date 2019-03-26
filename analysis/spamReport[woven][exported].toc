@@ -1,0 +1,47 @@
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1}Introduction}{2}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2}Model Design}{2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1}Process Equations}{2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.2}Observation Equations}{3}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3}Data Inputs}{5}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1}Smoothing Maturities and Weights}{6}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4}Model Analysis}{7}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{Appendices}{7}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {A}Numerically stable logged normal cumulative distribution function derivatives in TMB}{7}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {A.1}Extending stability to censored bounds}{8}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {B}Functional Principal Component Analysis}{9}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{Appendices}{10}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {C}\texttt {C++} Code used}{10}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {C.1}\texttt {fit.cpp} (Model Main)}{10}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {C.2}\texttt {pnorm4.hpp}}{15}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {C.3}\texttt {Fcorr.hpp}}{17}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {C.4}\texttt {MVMIX.hpp}}{19}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {C.5}\texttt {C++} code used outside model}{20}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {C.6}\texttt {R} Code used}{21}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\numberline {C.6.1}\texttt {spam.R}}{21}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\numberline {C.6.2}\texttt {NCplots.R}}{25}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\numberline {C.6.3}\texttt {fpcaData.R}}{30}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{\numberline {C.6.4}\texttt {mdata3Ps.R}}{32}

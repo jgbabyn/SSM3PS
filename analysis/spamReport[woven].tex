@@ -62,7 +62,7 @@
 \usepackage{xcolor}
 \usepackage[toc,page]{appendix}
 \usepackage[acronym]{glossaries}
-\
+\usepackage{listings}
 \renewcommand{\nomname}{List of Abbreviations and Symbols Used}
 \makenomenclature
 \makeglossaries
@@ -90,12 +90,15 @@
 \newacronym{crl}{CRL}{Continuation Ratio Logit}
 \newacronym{rv}{RV}{Research Vessel}
 \newacronym{geac}{GEAC}{Groundfish Enterprise Allocation Council}
+\newacronym{nafo}{NAFO}{Northwest Atlantic Fisheries Organization}
+\newacronym{aic}{AIC}{Akaike Information Criterion}
+\newacronym{bic}{BIC}{Bayesian Information Criterion}
 
 \specialcomment{DrF}{\begingroup\ttfamily\color{blue}}{\endgroup}
 
 \specialcomment{Me}{\begingroup\ttfamily\color{red}}{\endgroup}
-%Control for the comments package
-%\excludecomment{DrF}
+% Control for the comments package
+% \excludecomment{DrF}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
@@ -114,83 +117,86 @@
 
 \section{Introduction}
 
+The cod stock in \acrfull{nafo} subdivision 3Ps is the last commerical cod fishery open in Newfoundland. \acrshort{nafo} subdivsion 3Ps is located off the southern coast of Newfoundland containing the French Overseas Collectivity of Saint Pierre \& Miquelon is located partially on St. Pierre bank. The cod stock there is jointly managed by the French and Canadian governments. The stock is currently considered to be in the cautious zone by \acrshort{dfo} as of January 2017\cite{rideout2017assessing}.
+
+Currently the stock assessment model for 3Ps is a survey based model referred to as SURBA written by Noel Cadigan that has been in use since 2010\cite{cadigan2010trends}. Since SURBA is a survey based model it only incorporates information from surveys such as \acrfull{dfo}'s multispecies \acrfull{rv} bottom trawl survey that has occurred almost every year in 3Ps since 1972\cite{doubleday1981manual}. The current 3Ps stock assessment model also relies on data solely from \acrshort{dfo}'s \acrshort{rv} survey from 1983 onwards and not from the French survey that was performed from 1978 to 1992, the industry backed survey by the \acrfull{geac} that occured in the area from 1997 to 2007, or the stil ongoing sentinel survey that started in 1995. Some of these surveys have been involved in past assessment models but have not been used recently\cite{brattey2005assessment}.  
 \section{Model Design}
 \subsection{Process Equations}
 The \acrfull{spam} is a state-space stock assessment model implemented in \acrfull{tmb}. As a \acrfull{ssm} the model can be separated into process equations and observation equations. \acrshort{spam} follows the same general process equations design as Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, with the log abundance at age $a$ in a given year $y$, $\log(N_{y,a})$ as 
 \begin{equation}\label{Nrec}
-\log(N_{y,R}) = \log(\text{SR})) + \eta_{y,R}, \quad \ \eta_{y,R} \sim \mathcal{N}(0,\sigma_R^2) \quad R < a ,
+  \log(N_{y,R}) = \log(\text{SR})) + \eta_{y,R}, \quad \ \eta_{y,R} \sim \mathcal{N}(0,\sigma_R^2) \quad R < a ,
 \end{equation}
 \begin{equation}\label{Nsur}
-\log(N_{y,a}) = \log(N_{y-1,a-1}\exp(-Z_{y-1,a-1})) + \eta_{y,a}, \quad \eta_{y,a} \sim \mathcal{N}(0,\sigma_S^2) \quad R < a < A \quad \text{and}
+  \log(N_{y,a}) = \log(N_{y-1,a-1}\exp(-Z_{y-1,a-1})) + \eta_{y,a}, \quad \eta_{y,a} \sim \mathcal{N}(0,\sigma_S^2) \quad R < a < A \quad \text{and}
 \end{equation}
 \begin{equation}\label{Nplus}
-\log(N_{y,A}) = \log(N_{y-1,a-1}\exp(-Z_{y-1,a-1})+N_{y-1,A}\exp(-Z_{A,y-1})) + \eta_{y,A} \quad \eta_{y,A} \sim \mathcal{N}(0,\sigma^2_S)
+  \log(N_{y,A}) = \log(N_{y-1,a-1}\exp(-Z_{y-1,a-1})+N_{y-1,A}\exp(-Z_{A,y-1})) + \eta_{y,A} \quad \eta_{y,A} \sim \mathcal{N}(0,\sigma^2_S)
 \end{equation}
 with $Z_{y,a} = F_{y,a} + M_{y,a}$, where $F_{y,a}$ is mortality from fishing and natural mortaility $M_{y,a}$. Natural mortality was taken to be a fixed constant.
 
 Equation \ref{Nrec} is the process of recruitment of cod to the fishery, $R$ is the first age included in the model and SR is some form of stock recruitment. \acrshort{spam} implements four different options for stock recruitment, 
 \begin{equation}\label{rw}
-	\text{Random Walk: } \text{SR} = N_{y,R} = N_{y-1,R} + \eta_{y,R}
+  \text{Random Walk: } \text{SR} = N_{y,R} = N_{y-1,R} + \eta_{y,R}
 \end{equation}
 \begin{equation}\label{ricker}
-	\text{Ricker: } \text{SR} = \alpha\text{SSB}\exp(-\beta\text{SSB})
+  \text{Ricker: } \text{SR} = \alpha\text{SSB}\exp(-\beta\text{SSB})
 \end{equation}
 \begin{equation}\label{BH}
-\text{Beverton-Holt: } \text{SR} = \frac{\alpha\text{SSB}}{1+\beta\text(SSB)} \quad \text{and}  	
+  \text{Beverton-Holt: } \text{SR} = \frac{\alpha\text{SSB}}{1+\beta\text(SSB)} \quad \text{and}  	
 \end{equation}
 \begin{equation}
-	\text{Smooth HS: }\text{SR} = \alpha \bigg( \text{SSB} + \sqrt{\delta^2 + \frac{\gamma^2}{4}} 
-	- \sqrt{(\text{SSB} - \delta)^2 + \frac{\gamma^2}{4}}\bigg)
+  \text{Smooth HS: }\text{SR} = \alpha \bigg( \text{SSB} + \sqrt{\delta^2 + \frac{\gamma^2}{4}} 
+  - \sqrt{(\text{SSB} - \delta)^2 + \frac{\gamma^2}{4}}\bigg)
 \end{equation}
 where \acrshort{ssb} is \acrfull{ssb} and $\gamma^2$ is a fixed parameter that controls the smoothness of the breakpoint and was set equal to 0.1. Equations \ref{Nsur} \& \ref{Nplus} are the process of survival, and Equation \ref{Nplus} is an extension for a plus group of cod aged $A$ or older. The entire $\bm{N}$ abundance matrix is treated as random parameters to be integrated out of the model using the Laplace Approximation, this has the benefit of making adding internal stock recruitment models very simple as the calculation of \acrshort{ssb} can be done at any point in the model, as the values of $\bm{N}$ will be found during optimization. It also greatly reduces model run-time and the number of fixed effect parameters to estimate. Modelling survival as process error also has the benefit of allowing for immigration of fish into the stock of interest, which is something that may be relevant to 3Ps cod as stock mixing has been a concern\cite{methot2005spatio}\cite{rideout2017assessing}.
 
 Fishing mortality was also implemented the same way as in Nielsen \& Berg\cite{Nielsen2014Estimation-of-t}. For a given year of fishing mortality $\bm{F}_y=(F_{y,1},\dots,F_{y,A})'$ is a \acrfull{mvn} random walk, 
 
 \begin{equation}
-	\log(\bm{F}_y) = \log(\bm{F}_{y-1}) + \xi_y, \quad \xi_y \sim MVN(\bm{0},\bm{\Sigma_F})
+  \log(\bm{F}_y) = \log(\bm{F}_{y-1}) + \xi_y, \quad \xi_y \sim MVN(\bm{0},\bm{\Sigma_F})
 \end{equation}, with $\bm{\Sigma_F}$ being the covariance matrix. This implementation allows for time varying selectivity, with selectivity being defined as $S_{y,a} = \frac{F_{y,a}}{\sum_{a}F_{a,y}}$\cite{Nielsen2014Estimation-of-t}. Since the 3Ps cod fishery has seen a shift in gear types over time, most notably a move away from otter trawls and cod traps to gillnet, time varying selectivity can help deal with this. As in Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, the same four covariance options were implemented. A fifth covariance option was also added which allows for a different correlation $\rho_a$ for each age. This was mainly done with the intention of making fishing mortality in age 2 cod uncorrelated with older fish, e.g. $\rho_2=0$. Table \ref{sigTab} illustrates the different covariance matrix options available in \acrshort{spam}.
 
 \begin{table}[]
-\begin{tabular}{lllll}
-Name & Off-diagonal elements &\\ \hline
-Independent & $\bm{\Sigma}_{a,\tilde a} = 0$ &\\
-Parallel    & $\bm{\Sigma}_{a,\tilde a} = \sigma_a\sigma_{\tilde a}$                             &\\
-Compound    & $\bm{\Sigma}_{a,\tilde a} = \rho\sigma_a\sigma_{\tilde a}$                              &\\
-AR(1)       & $\bm{\Sigma}_{a,\tilde a} = \rho^{|a-\tilde a|}\sigma_a\sigma_{\tilde a}$                            & \\
-Custom      & $\bm{\Sigma}_{a,\tilde a} = \rho_a\rho_{\tilde a}\sigma_a\sigma_{\tilde a}$                             & 
-\end{tabular}
-\caption{Covariance matrix options available in \acrshort{spam} for ages $a$, $a \neq \tilde a$, independent is uncorrelated between ages and the process will develop independently in time, parallel is like $\rho=1$ and is the same as the assumption of constant selectivity, compound has all the age groups develop correlated in time the same, AR(1) has all the processes be correlated as function of the distance between ages, so closer ages are more closely related. Custom allows having ages have their own correlation parameter.}
-\label{sigTab} 
+  \begin{tabular}{lllll}
+    Name & Off-diagonal elements &\\ \hline
+    Independent & $\bm{\Sigma}_{a,\tilde a} = 0$ &\\
+    Parallel    & $\bm{\Sigma}_{a,\tilde a} = \sigma_a\sigma_{\tilde a}$                             &\\
+    Compound    & $\bm{\Sigma}_{a,\tilde a} = \rho\sigma_a\sigma_{\tilde a}$                              &\\
+    AR(1)       & $\bm{\Sigma}_{a,\tilde a} = \rho^{|a-\tilde a|}\sigma_a\sigma_{\tilde a}$                            & \\
+    Custom      & $\bm{\Sigma}_{a,\tilde a} = \rho_a\rho_{\tilde a}\sigma_a\sigma_{\tilde a}$                             & 
+  \end{tabular}
+  \caption{Covariance matrix options available in \acrshort{spam} for ages $a$, $a \neq \tilde a$, independent is uncorrelated between ages and the process will develop independently in time, parallel is like $\rho=1$ and is the same as the assumption of constant selectivity, compound has all the age groups develop correlated in time the same, AR(1) has all the processes be correlated as function of the distance between ages, so closer ages are more closely related. Custom allows having ages have their own correlation parameter.}
+  \label{sigTab} 
 \end{table} 
 
 \subsection{Observation Equations}
 \acrshort{spam} incorporates data from multiple different research vessel surveys, catch at age proportions and reported landings. For the survey indices $I_{y,a,s}$, which are reported as \acrfull{mnpt}, the value predicted by the model is 
 \begin{equation}
-	\log(\hat{I}_{y,a,s}) = \log(q_{a,s}) + \log(N_{y,a}) - t_{s,y}Z_{y,a}
+  \log(\hat{I}_{y,a,s}) = \log(q_{a,s}) + \log(N_{y,a}) - t_{s,y}Z_{y,a}
 \end{equation}
 where $q_{a,s}$ is the catch-ability parameter for survey $s$ for age $a$, and $t_{s,y}$ is the median date of the survey during the year in decimal form. As in the \acrfull{ncam} currently used for assessment for northern cod, \acrshort{spam} sets a survey detection limit of 0.0005, with the belief that the cod are there, just in not large enough numbers to be detected by the survey\cite{Cadigan2016A-state-space-s}. This says that the data is left censored. $I_{y,a,s} > 0.0005$ are added to the log-likelihood as
 \begin{equation}
-\sum_a\sum_y \log\bigg(\varphi\bigg(\frac{\log(I_{y,a,s})-\log(\hat{I}_{y,a,s}])}{\sigma_{s,I}	}\bigg)\bigg)
+  \sum_a\sum_y \log\bigg(\varphi\bigg(\frac{\log(I_{y,a,s})-\log(\hat{I}_{y,a,s}])}{\sigma_{s,I}	}\bigg)\bigg)
 \end{equation}
 where $\varphi$ is the \acrshort{pdf} of the standard normal distribution and $\sigma_{s,I}$ is the standard deviation of the survey index for survey $s$. Indices that fall below the detection limit are added to the likelihood as
 \begin{equation}\label{surBound}
-\sum_a\sum_y \log\bigg(\Phi\bigg(\frac{\log(I_{y,a,s})-\log(\hat{I}_{y,a,s})}{\sigma_{s,I}	}\bigg)\bigg)	
+  \sum_a\sum_y \log\bigg(\Phi\bigg(\frac{\log(I_{y,a,s})-\log(\hat{I}_{y,a,s})}{\sigma_{s,I}	}\bigg)\bigg)	
 \end{equation}
 with $\Phi$ being the \acrfull{cdf} of the standard normal distribution.
 
 \acrshort{spam} calculates the expected catch $C$ in the model using the Baranov catch equation,
 \begin{equation}
-	\hat{C}_{y,a} = N_{y,a}(1-\exp(-Z_{y,a}))\frac{F_{y,a}}{Z_{y,a}}.
+  \hat{C}_{y,a} = N_{y,a}(1-\exp(-Z_{y,a}))\frac{F_{y,a}}{Z_{y,a}}.
 \end{equation}
 It does not fit directly to $\hat{C}$ but instead to the expected \acrfull{crl} of the catch proportions at age for a given year, $\bm{\hat{X}}_y$. \acrshort{crl} are defined as $P(Y = a | a \geq a) = \text{logit}(\pi_a)$ where $\pi_a = \frac{p_a}{p_a+\dots+p_A}$ and $p_a$ is proportion of catch at age $a$. Using \acrshort{crl}s allows for fitting on catch proportions but does not require knowing or assuming the sampling sizes used to determine the catch proportions. It does require having non-zero catch proportions and small values were added to the observed zero catch proportions, and these were used to create the observed \acrshort{crl}, $\bm{X}_y$. The observed \acrshort{crl} are assumed be distributed as
 \begin{equation}
-	\bm{X}_y \sim MVN(\hat{\bm{X}}_y,\bm{\Sigma}_{CRL})
+  \bm{X}_y \sim MVN(\hat{\bm{X}}_y,\bm{\Sigma}_{CRL})
 \end{equation}
 where $\bm{\Sigma}_{CRL}$ can be any one of the same covariance matrix options presented in Table \ref{sigTab} allowing for a correlation structure between ages.
 
 Since \acrshort{spam} fits catch proportions instead of catch at age, a third element is needed to fix the the magnitudes of abundance. The reported landings that were provided were used to do this. This was done in a similar fashion to how it is outlined in the \acrshort{ncam} paper, except instead of fitting to expected total catch for the year versus the observed total catch, this was instead done on the expected landings versus the observed landings. This was done since earlier catch at age calculations have been speculated to not include fish older than age 14 rather than their just be zero catch at those ages, whereas reported landings would and thus total observed catch would be under-reporting. The landings are added to the log-likelihood in the model as
 \begin{equation}\label{landBound}
-\sum_y \log\bigg\{\Phi\bigg(\frac{\log(L_y) + \log(UB)	- \log(\hat{L}_y)}{\sigma_L}\bigg)-\Phi\bigg(\frac{\log(L_y) + \log(LB)	- \log(\hat{L}_y)}{\sigma_L}\bigg)\bigg\}
+  \sum_y \log\bigg\{\Phi\bigg(\frac{\log(L_y) + \log(UB)	- \log(\hat{L}_y)}{\sigma_L}\bigg)-\Phi\bigg(\frac{\log(L_y) + \log(LB)	- \log(\hat{L}_y)}{\sigma_L}\bigg)\bigg\}
 \end{equation}
 where $L_y$ and $\hat{L_y}$ are the observed and predicted landings respectively, $UB$ and $LB$ are upper and lower bound multipliers on what the reported landings actually were. This is similar to Equation 7 of the \acrshort{ncam} paper. There it was noted that there can be issues optimizing the likelihood with this sort of formulation and there a mixture distribution and judicious choices of starting parameters were used to overcome them\cite{Cadigan2016A-state-space-s}. I instead opted to fix the problem directly by writing atomic functions for \acrshort{tmb} that manually defines the derivatives for Equations \ref{surBound} \& \ref{landBound} in a more numerically stable manner. This process is described in Appendix \ref{astable1}. This allows for \acrshort{spam} to be run with a wide variety of starting values and without the need for upper or lower bounds on parameters or the need to run the model twice to find reasonable starting values. For the same reason outlined in Cadigan (2016)\cite{Cadigan2016A-state-space-s}, $\sigma_L$ is fixed to be $\log(0.02)$ to prevent $\hat{L}_y$ from escaping the bounds too often or exceeding them by too much. 
 
@@ -198,126 +204,140 @@ where $L_y$ and $\hat{L_y}$ are the observed and predicted landings respectively
 The parameters estimated, including optional parameters by \acrshort{spam} are noted in Table \ref{paramTable}.
 
 \begin{table}[]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{ll}
- Fixed Parameters                       & Description                                                                            \\ \hline
-$\sigma_R$                      & Std. Dev. of Recruitment Process                                                       \\
-$\sigma_S$                      & Std. Dev. of Survival Process                                                          \\
-$\bm{\sigma}_{s,I}$             & Vector of Std. Dev. of survey indices                                                  \\
-$\bm{\sigma}_{F}$               & Vector of Std. Dev. for fishing mortality                                              \\
-$\rho_F$($\bm{\rho}_F$)         & Correlation parameter for $\bm{\Sigma}_F$(Vector if custom type,0 if independent)      \\
-$\bm{\sigma}_{CRL}$             & Vector of Std. Dev. for CRLs.                                                          \\
-$\rho_{CRL}$($\bm{\rho}_{CRL}$) & Correlation parameter for $\bm{\Sigma}_{CRL}$(Vector if custom type, 0 if independent) \\
-$\bm{q}$                        & Vector of catchability parameters for the survey indices                               \\
-$\alpha$                        & Optional parameter used in the three stock recruitment functions                       \\
-$\beta$                         & Optional parameter used in the Ricker and Beverton-Holt stock recruitment functions    \\
-$\delta$                        & Optional parameter used in the smooth hockey stick recruitment function                \\ \hline
-Random Parameters               & \\ \hline
-$\bm{N}$                        & Matrix of Abundance \\
-$\bm{F}$                        & Matrix of Fishing Mortality
-\end{tabular}
-}
-\caption{Mandatory and optional fixed effect parameters estimated in \acrshort{spam} followed by random parameters estimated.}
-\label{paramTable}
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \begin{tabular}{ll}
+      Fixed Parameters                       & Description                                                                            \\ \hline
+      $\sigma_R$                      & Std. Dev. of Recruitment Process                                                       \\
+      $\sigma_S$                      & Std. Dev. of Survival Process                                                          \\
+      $\bm{\sigma}_{s,I}$             & Vector of Std. Dev. of survey indices                                                  \\
+      $\bm{\sigma}_{F}$               & Vector of Std. Dev. for fishing mortality                                              \\
+      $\rho_F$($\bm{\rho}_F$)         & Correlation parameter for $\bm{\Sigma}_F$(Vector if custom type,0 if independent)      \\
+      $\bm{\sigma}_{CRL}$             & Vector of Std. Dev. for CRLs.                                                          \\
+      $\rho_{CRL}$($\bm{\rho}_{CRL}$) & Correlation parameter for $\bm{\Sigma}_{CRL}$(Vector if custom type, 0 if independent) \\
+      $\bm{q}$                        & Vector of catchability parameters for the survey indices                               \\
+      $\alpha$                        & Optional parameter used in the three stock recruitment functions                       \\
+      $\beta$                         & Optional parameter used in the Ricker and Beverton-Holt stock recruitment functions    \\
+      $\delta$                        & Optional parameter used in the smooth hockey stick recruitment function                \\ \hline
+      Random Parameters               & \\ \hline
+      $\bm{N}$                        & Matrix of Abundance \\
+      $\bm{F}$                        & Matrix of Fishing Mortality
+    \end{tabular}
+  }
+  \caption{Mandatory and optional fixed effect parameters estimated in \acrshort{spam} followed by random parameters estimated.}
+  \label{paramTable}
 \end{table}
 
 
 \section{Data Inputs} 
-In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall}. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
+Catch, surveys, landings, weights and maturities were used from 1959 to 2016 if available. The assessment here is run on data ranging from ages 2 to 16 with 14 and up comprising a plus group. For the plus group I used the sum for the catch and survey indices for ages 14 to 16 and the mean for the weights and maturities.
+
+The \acrshort{dfo} supplied \acrshort{rv} surveys started in 1983 and continue to run to this day. In 1997 the survey was extended to add more inshore strata. I decided to treat the \acrshort{dfo} survey from 1983-1996 with offshore indices only as one survey, and the 1997 onwards inshore plus offshore strata as another. In addition to the \acrshort{dfo} Offshore and Inshore and Offshore survey indices that were provided, I also took the \acrshort{rv} survey indices that were the result of the \acrfull{geac} \acrshort{rv} survey performed in 3Ps. \acrshort{geac} performed their survey in 3Ps from 1997 to 2007, with 2006 excluded and their data was given to \acrshort{dfo} to be analyzed in the same manner as \acrshort{dfo}'s \acrshort{rv} survey. These survey indices were taken from the \acrshort{dfo} research documents in \cite{mcclintock2005year} \& \cite{mcclintock2011fall} and made available for everyone else in the class to use. The \acrshort{geac} indices were included in past 3Ps cod assessments, but have not been included recently, in addition the 1997 survey indices were not used in those assessments due to a much smaller smaller area being surveyed than other years\cite{brattey2005assessment}. Due to this I also elected not to use the 1997 \acrshort{geac} survey indices and I also chose not to use the 2007 \acrshort{geac} survey indices since they expanded the survey extent and used an entirely different set of equipment than previous years. Juliette Champagnat provided the survey indices from the French \acrshort{rv} survey that was performed in 3Ps from 1978 to 1992.
 
 Due to the approach I opted to take with the landings, upper and lower bounds on the landings are required. I consulted with Danny Ings, head of 3Ps cod stock stock assessment at \acrshort{dfo}, he provided a set of periods with a general idea of how they relate to each other in width, but not exact bounds. These periods, along with the selection of landings bounds that were tried can be seen in Table \ref{landTable}. 
 
-As previously mentioned, since the raw catch proportions used to determine catch at age are not available, nor their sample sizes, the catch at age was converted to be catch proportions at age then to the catch \acrshort{crl}s used in the model. Ideally the raw catch proportions would be provided and their sample sizes known which would allow for other 
+As previously mentioned, since the raw catch proportions used to determine catch at age are not available, nor their sample sizes, the catch at age was converted to be catch proportions at age then to the catch \acrshort{crl}s used in the model. Ideally the raw catch proportions would be provided and their sample sizes known which would allow for other possibly better options of representing compositional data. 
 
 
 
 \begin{table}[]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lllll}
-Period                        & Danny Ings' Description                           & Tight       & Medium      & Wide        \\ \hline
-1959-1993                     & Somewhat wide                                  & (0.75,1.25) & (0.5,1.5)   & (0.35,1.75) \\
-1994-1996                     & Narrow                                         & (0.95,1.05) & (0.90,1.10) & (0.80,1.20) \\
-1997-1998(or 1997-1999)       & Very Wide                                      & (0.5,1.5)   & (0.35,1.75) & (0.25,2.0)  \\
-1999-present(or 2000-present) & Narrower than 1959-1993 but wider than 1994-96 & (0.85,1.15) & (0.75,1.25) & (0.5,1.5)  
-\end{tabular}%
-}
-\caption{The periods for landing bounds provided by Danny Ings, along with the description of how they relate and three sets of different upper and lower bound multipliers to be tested on \acrshort{spam}.}
-\label{landTable}
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lllll}
+      Period                        & Danny Ings' Description                           & Tight       & Medium      & Wide        \\ \hline
+      1959-1993                     & Somewhat wide                                  & (0.75,1.25) & (0.5,1.5)   & (0.35,1.75) \\
+      1994-1996                     & Narrow                                         & (0.95,1.05) & (0.90,1.10) & (0.80,1.20) \\
+      1997-1998(or 1997-1999)       & Very Wide                                      & (0.5,1.5)   & (0.35,1.75) & (0.25,2.0)  \\
+      1999-present(or 2000-present) & Narrower than 1959-1993 but wider than 1994-96 & (0.85,1.15) & (0.75,1.25) & (0.5,1.5)  
+    \end{tabular}%
+  }
+  \caption{The periods for landing bounds provided by Danny Ings, along with the description of how they relate and three sets of different upper and lower bound multipliers to be tested on \acrshort{spam}.}
+  \label{landTable}
 \end{table}
 
 \subsection{Smoothing Maturities and Weights}
 
-Two important pieces for calculating \acrshort{ssb} are the weights used and maturity ogives. The maturity ogives provided are the output of a logistic regression run and updated each year from fish that have had their otoliths aged, lengths measured and maturity status determined. This results in very noisy maturity data set for each age group. For both the commercial and stock weights, output from a cohort model going from 1983 to 2016 were provided, along with commercial and stock weights from 1959 to 2014 and 1959 to 2017 respectively provided by \acrshort{dfo}. The weights provided by \acrshort{dfo} are noisy, and values prior to 1977 are identical and likely copy and pasted from some mean weights derived at some point. Neither of these situations are ideal. The weights either need to be extended thirty back into the past or improved. While the \acrshort{dfo} provided weights unfortunately do not have real observations prior to 1977, the values provided at least seem consistent when compared with the output of the cohort model weights. I chose to try and deal with the noise in the \acrshort{dfo} provided weights rather than extend the other weights back as the \acrshort{dfo} weights are based on actual commercial sampling efforts rather than being based off research vessel survey data and weight length relationships.
+Two important pieces for the model are the weights used and maturity ogives. The maturity ogives provided are the output of a logistic regression run and updated each year from fish that have had their otoliths aged, lengths measured and maturity status determined. This results in very noisy maturity data set for each age group. For both the commercial and stock weights, output from a cohort model going from 1983 to 2016 were provided, along with commercial and stock weights from 1959 to 2014 and 1959 to 2017 respectively provided by \acrshort{dfo}. The weights provided by \acrshort{dfo} are noisy, and values prior to 1977 are identical and likely copy and pasted from some mean weights derived at some point. Neither of these situations are ideal. The weights either need to be extended thirty back into the past or improved. While the \acrshort{dfo} provided weights unfortunately do not have real observations prior to 1977, the values provided at least seem consistent when compared with the output of the cohort model weights. I chose to try and deal with the noise in the \acrshort{dfo} provided weights rather than extend the other weights back as the \acrshort{dfo} weights are based on actual commercial sampling efforts rather than being based off research vessel survey data.
 
- Both the maturities and weights were smoothed using \acrfull{fpca}. \acrshort{fpca} is a non-parametric technique that has been used to perform noise reduction on curve like data\cite{ramsay2007applied}. \acrshort{fpca} has at least been at least applied to fisheries data in the context of evaluating spatio-temporal patterns in the data\cite{embling_2012} but it has not to the author's knowledge been applied to fisheries weight or growth data. The noise reduction is done by breaking the data down into it's mean function $\mu(t)$, eigenfunctions $\phi_k(t)$ and \acrfull{fpc}, $\xi_{ki}$ and keeping only the number of \acrshort{fpc}s that explain most of the variation in the data.  Further details on \acrshort{fpca} and this process can be seen in Appendix \ref{afpca}.
+Both the maturities and weights were smoothed using \acrfull{fpca}. \acrshort{fpca} is a non-parametric technique that has been used to perform noise reduction on curve like data\cite{ramsay2007applied}. \acrshort{fpca} has at least been at least applied to fisheries data in the context of evaluating spatio-temporal patterns in the data\cite{embling_2012} but it has not to the author's knowledge been applied to fisheries weight or growth data. The noise reduction is done by breaking the data down into it's mean function $\mu(t)$, eigenfunctions $\phi_k(t)$ and \acrfull{fpc}, $\xi_{ki}$ and keeping only the number of \acrshort{fpc}s that explain most of the variation in the data.  Further details on \acrshort{fpca} and this process can be seen in Appendix \ref{afpca}.
 
 For the maturities, the logit was taken and the \acrshort{fpca} performed in logit space to ensure that maturity proportions would continue to lie between 0 and 1 after smoothing. The FPCA was performed with each age group being considered an observation measured at each year. Smoothing was allowed on the mean function and a user selected bandwidth of 14 was chosen which removed many of the peaks and valleys. The diagnostic plots of the \acrshort{fpca} performed on the maturities showcasing the mean function, first three eigenfunctions, fraction of variance explained by each \acrshort{fpc} are seen in Figure \ref{fig:matFPCAd}. Over 90\% of the variance is explained by the first \acrshort{fpc}, because of this only the first \acrshort{fpc} was used in creating the smoothed data. Plots comparing the smoothed and raw versions of the maturities by age and year are in Figure \ref{matFPCAp}.
 
-For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. 
+For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. Looking at the smoothed commerical weights I noticed that the main bulk of the data appeared to be broken into two groups and could be mostly split into data pre and post 1994. This trend is also noticable in the original data but not as clearly. There was a shift in gear types towards gillnets in 3Ps in 1994, however that should result in the opposite trend with commercial weights increasing if this was the cause. Low sampling numbers would most likely not explain this either, as a $20+$ year sustained downward bias would be unlikely. There is the possibility that there has been a change in how the aging has been done either with pre-1994 cod otolith readers underestimating ages or post-1994 readers overestimating ages. This change also occurs during the period when the stock collapsed and it is possible that this is somehow related as well. Danny Ings told me \acrshort{dfo} is aware of the issue but is not sure of the exact cause either when I consulted him about it.  
+
+
+Danny Ings also informed me that the provided \acrshort{dfo} stock weights are just model back calculations of the commercial weights. I decided to move the smoothed commerical weights back half of a year in time and use those as the stock weights for the model. This is effectively just shifting them down the curve. 
+
+\section{Model Analysis}
+
+
+
+There are too many possible options in \acrshort{spam} to evaluate all of them directly. To narrow down a set of candidate model options, I ran \acrshort{spam} once for every possible option of covariance matrix for the $\bm{F}_y$ random walk and the catch \acrshort{crl}s along with the four possible recruitment options on a single specified mapping of vector parameters shown in table \ref{candTable}. The \acrfull{aic}, \acrfull{bic}, log-likelihood, time elapsed and convergence status were recorded. 66 of the 100 model runs resulted in relative convergance while the remaining 44 resulted in false or singular convergence and were removed from contention. The top performing models were those that used the custom correlation structure for both the $\bm{F}_y$ random walk and the catch \acrshort{crl}s, note that $\rho_2$ was explictly fixed to be equal to 0 in both cases.
+
+
+
 
 
 \begin{appendices}
-\section{Numerically stable logged normal cumulative distribution function derivatives in TMB}\label{astable1}
-\texttt{\acrshort{tmb}} uses \acrfull{ad} to generate the first and second derivatives which are used to help with both performing \acrshort{mle} for parameters and integrating random effects out of the likelihood with the \acrfull{la}. \texttt{\acrshort{tmb}} accomplishes this with a mixture of forward and reverse \acrshort{ad} accumulation modes. Further details on \acrshort{ad} can be seen in Fournier et al\cite{Fournier_2012}. \texttt{\acrshort{tmb}} automatically tries to determine the derivatives of the user's template. However, it can not automatically determine the most numerically stable form of the derivative which can often be necessary when working with extremely small values that can commonly occur when working with probabilities. \texttt{\acrshort{tmb}} also includes the ability to manually define the forward and reverse modes for a given function to overcome this limitation using atomic functions. By default \texttt{\acrshort{tmb}} includes a built in atomic version of the normal \acrshort{cdf}, \texttt{pnorm} based on the version in \texttt{R}'s \texttt{C} language math library. This built-in version does not support the ability to return a logged value of the probability and shares the same limitation of returning 0 or 1 for negative or positive values of standard normal $Z$ scores when $|Z| > \sim 38$ due to floating point limitations. This clearly means that for any $Z < -38$, \texttt{\acrshort{tmb}} will return a \texttt{NaN} in the gradient when trying to perform \texttt{log(pnorm(Z))} due to $\log(0)$ being negative infinity. In practice however this is actually much worse since the derivative of \texttt{log(pnorm(Z))} is 
-\begin{equation}\label{derlNCDF}
-	{{e^ {- {{z^2}\over{2}} }}\over{\sqrt{2\pi}\,\left({{
- \mathrm{erf}\left({{z}\over{\sqrt{2}}}\right)}\over{2}}+{{1}\over{2
- }}\right)}}
-\end{equation}
-and easily results in the division of two extremely small numbers. With floating point limitations this quickly becomes undefined if not handled correctly. 
+  \section{Numerically stable logged normal cumulative distribution function derivatives in TMB}\label{astable1}
+  \texttt{\acrshort{tmb}} uses \acrfull{ad} to generate the first and second derivatives which are used to help with both performing \acrshort{mle} for parameters and integrating random effects out of the likelihood with the \acrfull{la}. \texttt{\acrshort{tmb}} accomplishes this with a mixture of forward and reverse \acrshort{ad} accumulation modes. Further details on \acrshort{ad} can be seen in Fournier et al\cite{Fournier_2012}. \texttt{\acrshort{tmb}} automatically tries to determine the derivatives of the user's template. However, it can not automatically determine the most numerically stable form of the derivative which can often be necessary when working with extremely small values that can commonly occur when working with probabilities. \texttt{\acrshort{tmb}} also includes the ability to manually define the forward and reverse modes for a given function to overcome this limitation using atomic functions. By default \texttt{\acrshort{tmb}} includes a built in atomic version of the normal \acrshort{cdf}, \texttt{pnorm} based on the version in \texttt{R}'s \texttt{C} language math library. This built-in version does not support the ability to return a logged value of the probability and shares the same limitation of returning 0 or 1 for negative or positive values of standard normal $Z$ scores when $|Z| > \sim 38$ due to floating point limitations. This clearly means that for any $Z < -38$, \texttt{\acrshort{tmb}} will return a \texttt{NaN} in the gradient when trying to perform \texttt{log(pnorm(Z))} due to $\log(0)$ being negative infinity. In practice however this is actually much worse since the derivative of \texttt{log(pnorm(Z))} is 
+  \begin{equation}\label{derlNCDF}
+    {{e^ {- {{z^2}\over{2}} }}\over{\sqrt{2\pi}\,\left({{
+              \mathrm{erf}\left({{z}\over{\sqrt{2}}}\right)}\over{2}}+{{1}\over{2
+            }}\right)}}
+  \end{equation}
+  and easily results in the division of two extremely small numbers. With floating point limitations this quickly becomes undefined if not handled correctly. 
 
-I created an atomic function to specifically deal with the problem of numerical stability when trying to do \texttt{log(pnorm(Z))} and similar calculations in the objective function of \acrshort{spam} such as those done when using a censored likelihood for the detection limit for fitting the observation equations for the survey indices. This requires specifying more numerically stable versions for both the forward and reverse \acrshort{ad} modes. For the forward mode this is just the \texttt{double C++} function giving the log of the normal \acrshort{cdf} and all that requires is calling the version of \texttt{pnorm} in \texttt{R}'s \texttt{C} math library with the \texttt{give.log} flag turned on. For the reverse mode just using Equation \ref{derlNCDF} is not numerically stable due to the division. It can easily be seen that Equation \ref{derlNCDF} is equivalent to 
-\begin{equation}\label{logder}
-	\exp \left (\log \left({{e^ {- {{z^2}\over{2}} }}\over{\sqrt{2\pi}}}
- \right) - \log \left({{\mathrm{erf}\left({{z}\over{\sqrt{2}}}\right)}\over{2
- }}+{{1}\over{2}}\right) \right).
-\end{equation}
- Working in log space is much less likely to result in under or overflow of floating point values when performing division of small numbers. Using numerically stable versions of the logged normal \acrshort{pdf} \& \acrshort{cdf}s and the form in Equation \ref{logder} results in a numerically stable reverse mode derivative for \texttt{log(pnorm(Z))}. The atomic function was wrapped in the function \texttt{pnorm4} and made available for others to use in the \texttt{C++} header file \texttt{pnorm4.hpp}. Using \texttt{pnorm4(Z)} in place of \texttt{log(pnorm(Z))} allows for running one-sided censor likelihood bounds without the need for using two runs of optimization.
- 
- It's accuracy was checked by comparing the results of the gradient and hessian generated by \texttt{\acrshort{tmb}} for \texttt{pnorm4} against the numerical first and second derivatives of \texttt{pnorm4} done by the \texttt{R} software package \texttt{numDeriv} along with the brute force first and second derivatives of the normal log(\acrshort{cdf}) calculated by the open-source computer algebra system \texttt{Maxima} with 5000 digits of floating point precision. 
+  I created an atomic function to specifically deal with the problem of numerical stability when trying to do \texttt{log(pnorm(Z))} and similar calculations in the objective function of \acrshort{spam} such as those done when using a censored likelihood for the detection limit for fitting the observation equations for the survey indices. This requires specifying more numerically stable versions for both the forward and reverse \acrshort{ad} modes. For the forward mode this is just the \texttt{double C++} function giving the log of the normal \acrshort{cdf} and all that requires is calling the version of \texttt{pnorm} in \texttt{R}'s \texttt{C} math library with the \texttt{give.log} flag turned on. For the reverse mode just using Equation \ref{derlNCDF} is not numerically stable due to the division. It can easily be seen that Equation \ref{derlNCDF} is equivalent to 
+  \begin{equation}\label{logder}
+    \exp \left (\log \left({{e^ {- {{z^2}\over{2}} }}\over{\sqrt{2\pi}}}
+      \right) - \log \left({{\mathrm{erf}\left({{z}\over{\sqrt{2}}}\right)}\over{2
+          }}+{{1}\over{2}}\right) \right).
+  \end{equation}
+  Working in log space is much less likely to result in under or overflow of floating point values when performing division of small numbers. Using numerically stable versions of the logged normal \acrshort{pdf} \& \acrshort{cdf}s and the form in Equation \ref{logder} results in a numerically stable reverse mode derivative for \texttt{log(pnorm(Z))}. The atomic function was wrapped in the function \texttt{pnorm4} and made available for others to use in the \texttt{C++} header file \texttt{pnorm4.hpp}. Using \texttt{pnorm4(Z)} in place of \texttt{log(pnorm(Z))} allows for running one-sided censor likelihood bounds without the need for using two runs of optimization.
+  
+  It's accuracy was checked by comparing the results of the gradient and hessian generated by \texttt{\acrshort{tmb}} for \texttt{pnorm4} against the numerical first and second derivatives of \texttt{pnorm4} done by the \texttt{R} software package \texttt{numDeriv} along with the brute force first and second derivatives of the normal log(\acrshort{cdf}) calculated by the open-source computer algebra system \texttt{Maxima} with 5000 digits of floating point precision. 
 
-\subsection{Extending stability to censored bounds} 	\label{astable2}
-Censored likelihood bounds pose a similar problem to the above. When using the built-in functions to add normally distributed censored log-likelihood bounds this can be done like \texttt{log(pnorm(ZU))-log(pnorm(ZU))} where \texttt{ZU} \& \texttt{ZL} are Z scores of the upper and lower bounds respectively. Just replacing the calls to \texttt{pnorm} with the more stable \texttt{pnorm4} and using the brute force approach or \texttt{logspace\_sub} to perform the subtraction is not stable either. This is because for $Z > 38$ \texttt{pnorm} will return 1, or 0 for the logged version which will then result in trying to take the log of 0, again leading to \texttt{NaN} in the gradient.
+  \subsection{Extending stability to censored bounds} 	\label{astable2}
+  Censored likelihood bounds pose a similar problem to the above. When using the built-in functions to add normally distributed censored log-likelihood bounds this can be done like \texttt{log(pnorm(ZU))-log(pnorm(ZU))} where \texttt{ZU} \& \texttt{ZL} are Z scores of the upper and lower bounds respectively. Just replacing the calls to \texttt{pnorm} with the more stable \texttt{pnorm4} and using the brute force approach or \texttt{logspace\_sub} to perform the subtraction is not stable either. This is because for $Z > 38$ \texttt{pnorm} will return 1, or 0 for the logged version which will then result in trying to take the log of 0, again leading to \texttt{NaN} in the gradient.
 
-The normal CDF of the upper and lower bounds can be thought of as $\Phi(ZU)=1-\epsilon_u$ and $\Phi(ZL)=1-\epsilon_l$ where the $0 < \epsilon < 1$ and the censored log-likelihood bound is 
-\begin{equation}
-	\log(\Phi(ZU)-\Phi(ZL)) = \log(1-\epsilon_u-(1-\epsilon_l)) = \log(\epsilon_l-\epsilon_u). 
-\end{equation}
-It can also be seen that 
-\begin{equation}\label{negFormm}
-	\log(\Phi(-ZL)-\Phi(-ZU)) = \log(\epsilon_l-\epsilon_u) \quad \text{since} \quad \Phi(-Z) = 1-\Phi(Z) = 1-(1-\epsilon) = \epsilon.
-\end{equation}
-Since the problem of \texttt{NaN}s in the gradient is occurs because the relatively large value of 1 overwhelms the incredibly small values of $\epsilon$ for large positive values of Z again due to floating point limitations. This was solved by using equation \ref{negFormm} for positive values of Z instead but with probabilities returned in logged form and the subtraction done with \texttt{logspace\_sub}. This prevents the small $\epsilon$s from disappearing in the subtraction.   
+  The normal CDF of the upper and lower bounds can be thought of as $\Phi(ZU)=1-\epsilon_u$ and $\Phi(ZL)=1-\epsilon_l$ where the $0 < \epsilon < 1$ and the censored log-likelihood bound is 
+  \begin{equation}
+    \log(\Phi(ZU)-\Phi(ZL)) = \log(1-\epsilon_u-(1-\epsilon_l)) = \log(\epsilon_l-\epsilon_u). 
+  \end{equation}
+  It can also be seen that 
+  \begin{equation}\label{negFormm}
+    \log(\Phi(-ZL)-\Phi(-ZU)) = \log(\epsilon_l-\epsilon_u) \quad \text{since} \quad \Phi(-Z) = 1-\Phi(Z) = 1-(1-\epsilon) = \epsilon.
+  \end{equation}
+  Since the problem of \texttt{NaN}s in the gradient is occurs because the relatively large value of 1 overwhelms the incredibly small values of $\epsilon$ for large positive values of Z again due to floating point limitations. This was solved by using equation \ref{negFormm} for positive values of Z instead but with probabilities returned in logged form and the subtraction done with \texttt{logspace\_sub}. This prevents the small $\epsilon$s from disappearing in the subtraction.   
 
-Then a stable reverse mode similar to the one for \texttt{pnorm4} was made, and this was wrapped in the function \texttt{censored\_bounds}, checked for accuracy the same way and again made available for everyone to use in \texttt{pnorm4.hpp}. 
+  Then a stable reverse mode similar to the one for \texttt{pnorm4} was made, and this was wrapped in the function \texttt{censored\_bounds}, checked for accuracy the same way and again made available for everyone to use in \texttt{pnorm4.hpp}. 
 
-\section{Functional Principal Component Analysis}\label{afpca}
+  \section{Functional Principal Component Analysis}\label{afpca}
 
-\acrfull{fda} is a branch of statistics that deals with data that takes values in an infinite dimensional or functional space. Growth and maturity curves are one-dimensional examples of functional data. Several classical statistical techniques have been extended to work with functional data, \acrfull{pca} being among them. In \acrfull{pca} the goal is to perform dimension reduction while maximizing the variation explained by each dimension, \acrfull{fpca} extends this to functional data. Let X be a random function defined on the function grid $[0,T]$ with unknown smooth mean function
-\begin{equation}
-E[X(t)] = \mu(t) \quad t \in [0,T],	
-\end{equation}
-and covariance function
-\begin{equation}
-\text{Cov}(X(s),X(t)) = G(s,t) \quad s,t \in [0,T].	
-\end{equation}
-$G(s,t)$ can be written in it's orthogonal expansion as
-\begin{equation}
-	G(s,t) = \sum_{k=1}^{\infty} \lambda_k \phi_k(s)\phi_k(t)
-\end{equation}
- where $\lambda_k$ are the eigenvalues, and $\phi_k$ are eigenfunctions that form an othonormal basis with a unit norm. Using the orthogonal expansion allows re-writing each functional observation $X_i(t)$ in the Karhunen-Lo\`eve representation
- \begin{equation}
- X_i(t) = \mu(t) + \sum_{k=1}^{\infty} \xi_{ik}\phi_k(t) \quad \text{where} \quad \xi_{ik}= \int(X_i(t)-\mu(t))\phi_k(t)dt.
- \end{equation}
- The $\xi_{ik}$ are the \acrfull{fpc}\cite{Chiou_2014}. Like \acrshort{pca} Principal Components, \acrshort{fpc}s can also be clustered using clustering algorithms to find groups in the data. 
- 
- The Karhunen-Lo\`eve representation enables a few different things. When using estimated forms of the mean function, \acrshort{fpc}s, and eigenfunctions which can be found a number of ways such as numerical integration, using a limited number of \acrshort{fpc}s that explain most of the variation in the data can be used to generate noise reduced versions of the data while keeping the parts of the process that explain the most variability\cite{ramsay2007applied}. If $L$ is the number of \acrshort{fpc} that explain for example 90\% of the variation in the data, then noise reduced observations can be made by
- \begin{equation}
- 	\hat{X}_i(t) = \hat{\mu}(t) + \sum_{k=1}^{L} \hat{\xi}_{ik}\hat{\phi}_k(t).
- \end{equation}
- This same method can be used to impute missing parts of the function as well\cite{Chiou_2014}.
+  \acrfull{fda} is a branch of statistics that deals with data that takes values in an infinite dimensional or functional space. Growth and maturity curves are one-dimensional examples of functional data. Several classical statistical techniques have been extended to work with functional data, \acrfull{pca} being among them. In \acrfull{pca} the goal is to perform dimension reduction while maximizing the variation explained by each dimension, \acrfull{fpca} extends this to functional data. Let X be a random function defined on the function grid $[0,T]$ with unknown smooth mean function
+  \begin{equation}
+    E[X(t)] = \mu(t) \quad t \in [0,T],	
+  \end{equation}
+  and covariance function
+  \begin{equation}
+    \text{Cov}(X(s),X(t)) = G(s,t) \quad s,t \in [0,T].	
+  \end{equation}
+  $G(s,t)$ can be written in it's orthogonal expansion as
+  \begin{equation}
+    G(s,t) = \sum_{k=1}^{\infty} \lambda_k \phi_k(s)\phi_k(t)
+  \end{equation}
+  where $\lambda_k$ are the eigenvalues, and $\phi_k$ are eigenfunctions that form an othonormal basis with a unit norm. Using the orthogonal expansion allows re-writing each functional observation $X_i(t)$ in the Karhunen-Lo\`eve representation
+  \begin{equation}
+    X_i(t) = \mu(t) + \sum_{k=1}^{\infty} \xi_{ik}\phi_k(t) \quad \text{where} \quad \xi_{ik}= \int(X_i(t)-\mu(t))\phi_k(t)dt.
+  \end{equation}
+  The $\xi_{ik}$ are the \acrfull{fpc}\cite{Chiou_2014}. Like \acrshort{pca} Principal Components, \acrshort{fpc}s can also be clustered using clustering algorithms to find groups in the data. 
+  
+  The Karhunen-Lo\`eve representation enables a few different things. When using estimated forms of the mean function, \acrshort{fpc}s, and eigenfunctions which can be found a number of ways such as numerical integration, using a limited number of \acrshort{fpc}s that explain most of the variation in the data can be used to generate noise reduced versions of the data while keeping the parts of the process that explain the most variability\cite{ramsay2007applied}. If $L$ is the number of \acrshort{fpc} that explain for example 90\% of the variation in the data, then noise reduced observations can be made by
+  \begin{equation}
+    \hat{X}_i(t) = \hat{\mu}(t) + \sum_{k=1}^{L} \hat{\xi}_{ik}\hat{\phi}_k(t).
+  \end{equation}
+  This same method can be used to impute missing parts of the function as well\cite{Chiou_2014}.
 
 
 \end{appendices}
@@ -327,375 +347,55 @@ $G(s,t)$ can be written in it's orthogonal expansion as
 
 \begin{appendices}
   \section{\texttt{C++} Code used}\label{Ccode}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#include <TMB.hpp>}
-\hlcom{#include "pnorm4.hpp"}
-\hlcom{#include "Fcorr.hpp"}
-\hlcom{#include "MVMIX.hpp"}
-
-//Convert a matrix to it's proportions by row
-template<class Type>
-matrix<Type>  \hlkwd{propM}(matrix <Type > M)\{
-int A = \hlkwd{M.cols}();
-int Y = \hlkwd{M.rows}();
-
-matrix<Type> \hlkwd{retM}(Y,A);
-
-\hlkwd{for}(int y = 0;y < Y;y++)\{
-  vector<Type> cy = \hlkwd{M.row}(y);
-  Type tot = \hlkwd{cy.sum}();
-  vector<Type> prop = cy/tot;
-  \hlkwd{retM.row}(y) = prop;
-\}
-
-return retM;
-\}
-
-/*Calculate population weighted average F for some set of ages
- bAge is the beginning age to calculate average F over, eAge is the end Age.*/
-template<class Type>
-vector<Type> \hlkwd{aveF}(matrix<Type> F, matrix<Type> N, int bAge,int eAge)\{
-int Y = \hlkwd{F.rows}();
-int dist = (eAge-bAge)+1;
-matrix<Type> aveF = \hlkwd{F.array}()*\hlkwd{N.array}();
-//Get the block of the matrix starting at year 0 going to year Y, column of bAge extending the number of columns between eAge and bAge and take the sum rowwise.
-vector<Type> aveF_XY = \hlkwd{aveF.block}(0,bAge,Y,dist)\hlkwd{.rowwise}()\hlkwd{.sum}();
-vector<Type> tn = \hlkwd{N.block}(0,bAge,Y,dist)\hlkwd{.rowwise}()\hlkwd{.sum}();
-aveF_XY = aveF_XY/tn;
-return aveF_XY;
-
-\}
-
-
-/*Calculate CRLs from catch proportions*/
-template<class Type>
-matrix<Type> \hlkwd{makeCRLs}(matrix <Type > cProps)\{
-int A = \hlkwd{cProps.cols}();
-int Y = \hlkwd{cProps.rows}();
-
-matrix<Type> \hlkwd{crls}(Y,A-1);
-
-\hlkwd{for}(int a = 0; a < A-1;a++)\{
-  \hlkwd{for}(int y = 0; y < Y;y++)\{
-    vector<Type> cprow = \hlkwd{cProps.row}(y);
-    //get p_a+...+p_A
-    Type denom = \hlkwd{cprow.segment}(a,A-a)\hlkwd{.sum}();
-    Type num = \hlkwd{cProps}(y,a);
-    Type pi = num/denom;
-    \hlkwd{crls}(y,a) = \hlkwd{log}(pi/(1-pi));
-  \}
-\}
-
-return crls;
-\}
-
-/*Beverton-Holt Recruitment function*/
-template<class Type>
-Type \hlkwd{bHolt}(Type SSBly,vector <Type> bhParm)\{
-Type ret = \hlkwd{bhParm}(0) + \hlkwd{log}(SSBly) -\hlkwd{log}(1.0+\hlkwd{exp}(\hlkwd{bhParm}(1))*SSBly);
-return ret;
-\}
-
-/*Ricker recruitment function*/
-template<class Type>
-Type \hlkwd{ricker}(Type SSBly,vector <Type> rickParm)\{
-Type ret = \hlkwd{rickParm}(0) + \hlkwd{log}(SSBly) - \hlkwd{exp}(\hlkwd{rickParm}(1))*SSBly;
-return ret;
-\}
-
-//' Smooth Hockey Stick Recruitment Function
-template<class Type>
-Type \hlkwd{sHS}(Type SSBly,vector <Type> segParm,Type gammaSq)\{
-//Alpha and delta must be postive.
-Type delta = \hlkwd{exp}(\hlkwd{segParm}(1));
-Type alpha = \hlkwd{exp}(\hlkwd{segParm}(0));
-
-Type gm = gammaSq/4.0;
-Type sq1 = \hlkwd{sqrt}(delta*delta + gm);
-Type sq2 = \hlkwd{sqrt}((SSBly-delta)*(SSBly-delta) +gm);
-Type ret = \hlkwd{log}(alpha*(SSBly+sq1-sq2));
-return ret;
-\}
-
-
-template<class Type>
-Type objective_function<Type>::\hlkwd{operator}() ()
-\{
-enum fleetType \{
-  survey = 0,
-  Catch = 1,
-  land = 2
-\};
-
-enum recType \{
-  rw = 0,
-  bh = 1,
-  rick = 2,
-  smoothHS = 3
-\};
+  \subsection{\texttt{fit.cpp} (Model Main)}
+  \lstset{language=C++,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{green}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+  }
   
-
-// input data;  
-\hlkwd{DATA_MATRIX}(M);
-\hlkwd{DATA_MATRIX}(weight); 
-\hlkwd{DATA_MATRIX}(mat); 
-\hlkwd{DATA_MATRIX}(midy_weight);
-\hlkwd{DATA_VECTOR}(log_index);
-\hlkwd{DATA_IVECTOR}(i_zero); //A lot of this could be put in one IMATRIX?
-\hlkwd{DATA_IVECTOR}(iyear);
-\hlkwd{DATA_IVECTOR}(iage);
-\hlkwd{DATA_IVECTOR}(isurvey);
-\hlkwd{DATA_IVECTOR}(iq);
-\hlkwd{DATA_VECTOR}(fs);
-\hlkwd{DATA_IVECTOR}(ft);
-\hlkwd{DATA_VECTOR}(lowerMult); //Lower multiplier for censored bounds
-\hlkwd{DATA_VECTOR}(upperMult); //Upper multiplier for censored bounds
-\hlkwd{DATA_IVECTOR}(keyF);
-\hlkwd{DATA_INTEGER}(recflag);
-\hlkwd{DATA_INTEGER}(corflag);
-\hlkwd{DATA_INTEGER}(corflagCRL);
-\hlkwd{DATA_SCALAR}(gammaSq); //For smoothHS recruitment function, controls smoothness of breakpoint
-\hlkwd{DATA_VECTOR}(crlVec); //Vector of Continuation Ratio Logits for catch
-\hlkwd{DATA_IVECTOR}(aveFages); //Ages in model ages to calculate average F over...0 bAge, 1 for eAge
-
-
-\hlkwd{DATA_VECTOR_INDICATOR}(keep,log_index); //Used for one step predict, does not need to be read in from R
-\hlkwd{DATA_VECTOR_INDICATOR}(keepCRL,crlVec);
-
-int n = \hlkwd{log_index.size}();
-
-int A = \hlkwd{mat.cols}();
-int Y = \hlkwd{mat.rows}();
-vector<Type> index = \hlkwd{exp}(log_index);
-
-//define parameters;  
-\hlkwd{PARAMETER}(log_std_log_R);
-\hlkwd{PARAMETER_VECTOR}(log_qparm);
-\hlkwd{PARAMETER_VECTOR}(log_std_index); 
-\hlkwd{PARAMETER_VECTOR}(log_std_logF);          
-\hlkwd{PARAMETER_VECTOR}(log_std_CRL);
-\hlkwd{PARAMETER_VECTOR}(log_std_landings); //std. dev for landings, size 0 if fit_land=0, else 1
-\hlkwd{PARAMETER}(log_sdS);
-\hlkwd{PARAMETER_VECTOR}(rec_parm);
-\hlkwd{PARAMETER_VECTOR}(tRhoF);
-\hlkwd{PARAMETER_VECTOR}(tRhoCRL);
-
-//Random Effects
-\hlkwd{PARAMETER_MATRIX}(log_F);    
-\hlkwd{PARAMETER_MATRIX}(log_N);
-
-Type std_log_R = \hlkwd{exp}(log_std_log_R); 
-vector<Type> std_index = \hlkwd{exp}(log_std_index);
-vector<Type> std_logF = \hlkwd{exp}(log_std_logF); 
-vector<Type> std_CRL = \hlkwd{exp}(log_std_CRL);
-vector<Type> std_landings = \hlkwd{exp}(log_std_landings);
-Type sdS = \hlkwd{exp}(log_sdS);
+  \lstinputlisting[language=C++]{$HOME/Documents/GitHub/SSM3PS/src/TMB/fit.cpp}
+  \subsection{\texttt{pnorm4.hpp}}
+  \lstinputlisting[language=C++]{$HOME/Documents/GitHub/SSM3PS/src/TMB/pnorm4.hpp}
+  \subsection{\texttt{Fcorr.hpp}}
+  \lstinputlisting[language=C++]{$HOME/Documents/GitHub/SSM3PS/src/TMB/Fcorr.hpp}
+  \subsection{\texttt{MVMIX.hpp}}
+  This code was taken from the SAM github page as it supports OSA residuals and the current \texttt{MVNORM\_t} provided in \texttt{TMB} does not. The mixture probability was set to 0 in the model. It is also licensed as GPL-2 and thus fine for inclusion here.
+  \lstinputlisting[language=C++]{$HOME/Documents/GitHub/SSM3PS/src/TMB/MVMIX.hpp}
+  \subsection{\texttt{C++} code used outside model}
+  I decided it would be faster to simply convert the code I wrote to do \acrshort{crl}s inside the model for use in R when I had to switch from doing all the \acrshort{crl} related stuff inside the model to both inside and out for the sake of OSA residuals. This is just a version of makeCRLs that uses the Eigen library directly and does not take the log for the \acrshort{crl} as that's done later inside R. Using the \texttt{Rcpp} package these can be used as functions inside R. They are quick but have zero checks.
+  \lstinputlisting[language=C++]{$HOME/Documents/GitHub/SSM3PS/src/gross.cpp}
+  \subsection{\texttt{R} Code used}\label{Rcode}
+  \subsubsection{\texttt{spam.R}}
+  \lstset{language=R,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{green}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+  }
+  \lstinputlisting[language=R]{$HOME/Documents/GitHub/SSM3PS/R/spam.R}
+  \subsubsection{\texttt{NCplots.R}}
+  \lstinputlisting[language=R]{$HOME/Documents/GitHub/SSM3PS/R/NCplots.R}
+  \subsubsection{\texttt{fpcaData.R}}
+  \lstinputlisting[language=R]{$HOME/Documents/GitHub/SSM3PS/data-raw/fpcaData.R}
+  \subsubsection{\texttt{mdata3Ps.R}}
+  \lstinputlisting[language=R]{$HOME/Documents/GitHub/SSM3PS/data-raw/mdata3Ps.R}
   
-matrix<Type> \hlkwd{F}(Y,A);    
-matrix<Type> \hlkwd{Z}(Y,A);  
-matrix<Type> \hlkwd{EC}(Y,A);  
-matrix<Type> \hlkwd{ECW}(Y,A); 
-
-vector<Type> \hlkwd{Elog_index}(n); 
-vector<Type> \hlkwd{std_index_vec}(n);
-   
-//**********  start the engine ***************;
-
-using namespace density;
-Type nll = 0.0;  
-
-//compute F & Z
-\hlkwd{for}(int a = 0;a < A;++a)\{ 
-  \hlkwd{for}(int y = 0;y < Y;++y)\{
-    //keyF really cuts down on number of random parameters
-    \hlkwd{F}(y,a) = \hlkwd{exp}(\hlkwd{log_F}(y,\hlkwd{keyF}(a)));
-    \hlkwd{Z}(y,a) = \hlkwd{F}(y,a) + \hlkwd{M}(y,a);
-  \}
-\}
-
-matrix<Type> N = \hlkwd{log_N.array}()\hlkwd{.exp}();
-
-//Because of the magic from making log_N a parameter you can calculate SSB whenever you want.
-matrix<Type> B_matrix = \hlkwd{weight.array}()*\hlkwd{N.array}();
-matrix<Type> SSB_matrix = \hlkwd{mat.array}()*\hlkwd{B_matrix.array}();
-vector<Type> biomass = \hlkwd{B_matrix.rowwise}()\hlkwd{.sum}();
-vector<Type> ssb = \hlkwd{SSB_matrix.rowwise}()\hlkwd{.sum}();
-vector<Type> log_biomass = \hlkwd{log}(biomass);
-vector<Type> log_ssb = \hlkwd{log}(ssb);       
-
-
-
-//Recruitment, adding recruitment curves much easier because ssb is already available and will be optimized later
-Type predN;
-\hlkwd{for}(int y =1;y < Y;y++)\{
-  \hlkwd{switch}(recflag)\{
-  case rw:
-    predN = \hlkwd{log_N}(y-1,0);
-    break;
-  case bh:
-    predN = \hlkwd{bHolt}(\hlkwd{ssb}(y),rec_parm);
-    break;
-  case rick:
-    predN = \hlkwd{ricker}(\hlkwd{ssb}(y),rec_parm);
-    break;
-  case smoothHS:
-    predN = \hlkwd{sHS}(\hlkwd{ssb}(y),rec_parm,gammaSq);
-    break;
-  default:
-    \hlkwd{error}(\hlstr{"Not right rec type"});
-    break;
-  \}
   
-  nll -= \hlkwd{dnorm}(\hlkwd{log_N}(y,0),predN,std_log_R,true);
-\}
-
-
-//Fill in N, add survival process
-\hlkwd{for}(int y = 1;y < Y;++y)\{
-  \hlkwd{for}(int a = 1;a < A;++a)\{
-    predN = \hlkwd{log_N}(y-1,a-1)-\hlkwd{Z}(y-1,a-1);
-    \hlkwd{if}(a == A-1)\{//Plus group
-	predN = \hlkwd{logspace_add}(predN,\hlkwd{log_N}(y-1,a)-\hlkwd{Z}(y-1,a));
-    \}
-    nll -= \hlkwd{dnorm}(\hlkwd{log_N}(y,a),predN,sdS,true);
-  \}
-\}
-
-//F correlation matrix making, sigmaFgen lives in Fcorr.hpp
-matrix<Type> sigmaF = \hlkwd{sigmaFgen}(\hlkwd{log_F.cols}(),corflag,log_std_logF,tRhoF);
-\hlkwd{REPORT}(sigmaF);
-
-//Add the F random walk to the likelihood.
-density::MVNORM_t<Type> \hlkwd{Fdens}(sigmaF);
-\hlkwd{for}(int y = 1; y < Y;y++)\{
-  nll += \hlkwd{Fdens}(\hlkwd{log_F.row}(y)-\hlkwd{log_F.row}(y-1));
-\}
-
-//Expected catch, for making expected catch CRLs
-//Expected landings too
-\hlkwd{for}(int y = 0;y <Y;y++)\{
-  \hlkwd{for}(int a = 0;a <A;a++)\{
-    \hlkwd{EC}(y,a) = \hlkwd{N}(y,a)*(1.0-\hlkwd{exp}(-1.0*\hlkwd{Z}(y,a)))*\hlkwd{F}(y,a)/\hlkwd{Z}(y,a);
-    \hlkwd{ECW}(y,a) = \hlkwd{EC}(y,a)*\hlkwd{midy_weight}(y,a);
-  \}
-\}
-
-vector<Type> landings_pred = \hlkwd{ECW.rowwise}()\hlkwd{.sum}();
-vector<Type> total_expected_catch = \hlkwd{EC.rowwise}()\hlkwd{.sum}();
-matrix<Type> log_EC = \hlkwd{EC.array}()\hlkwd{.log}();
-
-vector<Type> log_landings_pred = \hlkwd{log}(landings_pred);
-vector<Type> log_total_expected_catch = \hlkwd{log}(total_expected_catch);
-
-\hlkwd{REPORT}(log_landings_pred);
-\hlkwd{REPORT}(log_total_expected_catch);
-
-// Landings, Survey index predictions
-int ia,iy;
-\hlkwd{for}(int i = 0;i < n;++i)\{
-  int fType = \hlkwd{ft}(i);
-  ia = \hlkwd{iage}(i);
-  iy = \hlkwd{iyear}(i);
-
-  //Observation equations
-  \hlkwd{switch}(fType)\{
-  case survey:
-    \hlkwd{std_index_vec}(i) = \hlkwd{std_index}(\hlkwd{isurvey}(i));
-    \hlkwd{Elog_index}(i) = \hlkwd{log_qparm}(\hlkwd{iq}(i)) + \hlkwd{log_N}(iy,ia) - \hlkwd{fs}(i)*\hlkwd{Z}(iy,ia);
-    \hlkwd{if}(\hlkwd{i_zero}(i) == 1)\{ //if zero use left-censor bound
-	nll -= \hlkwd{keep}(i)*\hlkwd{pnorm4}(\hlkwd{log_index}(i),\hlkwd{Elog_index}(i),\hlkwd{std_index_vec}(i),true);
-    \}      
-    else\{
-	nll -= \hlkwd{keep}(i)*\hlkwd{dnorm}(\hlkwd{log_index}(i),\hlkwd{Elog_index}(i),\hlkwd{std_index_vec}(i),true);
-    \}
-    break;
-  case land:
-    \hlkwd{Elog_index}(i) = \hlkwd{log_landings_pred}(iy);
-    \hlkwd{std_index_vec}(i) = \hlkwd{std_landings}(0);
-    nll -= \hlkwd{keep}(i)*\hlkwd{censored_bounds}(\hlkwd{log_index}(i),\hlkwd{Elog_index}(i),\hlkwd{std_index_vec}(i),-\hlkwd{log}(\hlkwd{lowerMult}(iy)),\hlkwd{log}(\hlkwd{upperMult}(iy)));
-    break;
-  default:
-    \hlkwd{error}(\hlstr{"Fleet Type not implemented"});
-    break;
-  \}
   
-\}
-
-matrix<Type> EPC = \hlkwd{propM}(EC);  //Expected Catch Proportions
-matrix<Type> ECRL = \hlkwd{makeCRLs}(EPC); //Expected Catch Continuation Ratio Logits
-
-matrix<Type> S = \hlkwd{propM}(F); //Selectivity F_\{y,a\}/(sum_\{a\}(F_\{y,a\}))
-
-\hlkwd{REPORT}(S);
-\hlkwd{REPORT}(EPC);
-\hlkwd{REPORT}(ECRL);
-
-//Correlation matrix for CRLs, might as well reuse sigmaFgen...
-matrix<Type> sigmaCRL = \hlkwd{sigmaFgen}(\hlkwd{ECRL.cols}(),corflagCRL,log_std_CRL,tRhoCRL);
-\hlkwd{REPORT}(sigmaCRL);
-
-//MV NORMAL MIXTURE distribution, second argument is the mixture probability, grabbed from SAM lives in MVMIX.hpp
-//MVNORM_t in TMB doesn't support OSA residuals yet, MVMIX_t from SAM does however there is a slight speed loss
-MVMIX_t<Type> \hlkwd{CRLdens}(sigmaCRL,0); //cause this is a MV MIXTURE duh. I could maybe actually try to use this part?
-\hlkwd{for}(int y = 0;y < Y;y++)\{
-  //IT'S VERY VERY IMPORTANT CATCH CRLs ARE SORTED YEAR THEN AGE HERE.
-  vector<Type> ECRLr = \hlkwd{ECRL.row}(y);
-  nll += \hlkwd{CRLdens}(\hlkwd{crlVec.segment}(y*(A-1),(A-1))-ECRLr,\hlkwd{keepCRL.segment}(y*(A-1),(A-1)));
-\}
-    
-    
   
-//pop size weighted ave F;  
-
-vector<Type> aveFXY = \hlkwd{aveF}(F,N,\hlkwd{aveFages}(0),\hlkwd{aveFages}(1));
-vector<Type> log_aveFXY = \hlkwd{log}(aveFXY);
-
-\hlkwd{REPORT}(std_logF);      
-\hlkwd{REPORT}(std_log_R);  
-\hlkwd{REPORT}(std_index);  
-
-\hlkwd{REPORT}(N);          
-\hlkwd{REPORT}(F);                  
-\hlkwd{REPORT}(Z);                  
-\hlkwd{REPORT}(B_matrix);             
-\hlkwd{REPORT}(SSB_matrix);                
-\hlkwd{REPORT}(biomass);                  
-\hlkwd{REPORT}(ssb);            
-\hlkwd{REPORT}(aveFXY);              
-
-\hlkwd{REPORT}(EC);                          
-\hlkwd{REPORT}(ECW);        
-
-\hlkwd{REPORT}(landings_pred); 
-
-\hlkwd{REPORT}(Elog_index);
-
-\hlkwd{REPORT}(log_F);                    
-
-\hlkwd{REPORT}(log_std_index); 
-\hlkwd{REPORT}(log_qparm);
-
-\hlkwd{ADREPORT}(log_landings_pred);     
-\hlkwd{ADREPORT}(log_biomass);           
-\hlkwd{ADREPORT}(log_ssb);   
-\hlkwd{ADREPORT}(log_aveFXY);  
-\hlkwd{ADREPORT}(log_qparm);
-
-\hlkwd{ADREPORT}(std_logF);      
-\hlkwd{ADREPORT}(std_log_R);
-\hlkwd{ADREPORT}(std_index);  
-
-return nll;
-\}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\subsection{\texttt{R} Code used}\label{Rcode}
-	
+  
+  
+  
 \end{appendices}
 
 
