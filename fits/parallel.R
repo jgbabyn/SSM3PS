@@ -1,11 +1,10 @@
 library(TMB)
 
 library(SSM3PS)
-source("~/Dropbox/workingOk/SSM3PS/data-raw/mdata3Ps.R")
+data(rDat)
 
-
-dat <- datSetup(surveys,landings,fstock_wt,fcomm_wt,mat=fmat,
-                age=2:16,years=1959:2016,plusGroup=14)
+dat <- datSetup(rDat$surveys,rDat$landings,rDat$stock_wt,rDat$midy_wt,mat=rDat$mat,
+                age=2:16,years=1983:2015,plusGroup=14)
 
 indi = dat$indices
 crls = dat$crls
@@ -21,7 +20,7 @@ param$log_qparm = rep(0,length(unique(na.omit(data$iq))))
 
 data$keyF = c(0,1,2,3,4,rep(5,13-5))
 #data$keyF = c(0:4,5,5,5,5,5,5,5,5)
-data$corflag = 1
+data$corflag = 0
 data$corflagCRL = 0
 param$log_std_logF = rep(0,length(unique(data$keyF)))
 param$log_F = matrix(0,nrow=nrow(data$mat),ncol=length(param$log_std_logF))

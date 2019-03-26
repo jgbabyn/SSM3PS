@@ -43,6 +43,7 @@
 \newacronym{nafo}{NAFO}{Northwest Atlantic Fisheries Organization}
 \newacronym{aic}{AIC}{Akaike Information Criterion}
 \newacronym{bic}{BIC}{Bayesian Information Criterion}
+\newacronym{osa}{OSA}{One Step Ahead}
 
 \specialcomment{DrF}{\begingroup\ttfamily\color{blue}}{\endgroup}
 
@@ -71,10 +72,12 @@
 
 The cod stock in \acrfull{nafo} subdivision 3Ps is the last commerical cod fishery open in Newfoundland. \acrshort{nafo} subdivsion 3Ps is located off the southern coast of Newfoundland containing the French Overseas Collectivity of Saint Pierre \& Miquelon is located partially on St. Pierre bank. The cod stock there is jointly managed by the French and Canadian governments. The stock is currently considered to be in the cautious zone by \acrshort{dfo} as of January 2017\cite{rideout2017assessing}.
 
-Currently the stock assessment model for 3Ps is a survey based model referred to as SURBA written by Noel Cadigan that has been in use since 2010\cite{cadigan2010trends}. Since SURBA is a survey based model it only incorporates information from surveys such as \acrfull{dfo}'s multispecies \acrfull{rv} bottom trawl survey that has occurred almost every year in 3Ps since 1972\cite{doubleday1981manual}. The current 3Ps stock assessment model also relies on data solely from \acrshort{dfo}'s \acrshort{rv} survey from 1983 onwards and not from the French survey that was performed from 1978 to 1992, the industry backed survey by the \acrfull{geac} that occured in the area from 1997 to 2007, or the stil ongoing sentinel survey that started in 1995. Some of these surveys have been involved in past assessment models but have not been used recently\cite{brattey2005assessment}.  
+Currently the stock assessment model for 3Ps is a survey based model referred to as SURBA written by Noel Cadigan that has been in use since 2010\cite{cadigan2010trends}. Since SURBA is a survey based model it only incorporates information from surveys such as \acrfull{dfo}'s multispecies \acrfull{rv} bottom trawl survey that has occurred almost every year in 3Ps since 1972\cite{doubleday1981manual}. The current 3Ps stock assessment model also relies on data solely from \acrshort{dfo}'s \acrshort{rv} survey from 1983 onwards and not from the French survey that was performed from 1978 to 1992, the industry backed survey by the \acrfull{geac} that occured in the area from 1997 to 2007, or the stil ongoing sentinel survey that started in 1995. Some of these surveys have been involved in past assessment models but have not been used recently\cite{brattey2005assessment}. 
+
+Model designs and the software available to model them have improved greatly since the adoption of SURBA in 2010. \acrfull{ssm} modelling approaches were previously much more difficult to implement and use but advances in software making use of \acrfull{ad} and \acrfull{la} more approachable such as \acrshort{ad} Model Builder \& \acrfull{tmb}\cite{aeberhard2018review}. A \acrshort{ssm} approach has not been formally applied to 3Ps cod and may be able to paint a more accurate picture of the health of the stock.  
 \section{Model Design}
 \subsection{Process Equations}
-The \acrfull{spam} is a state-space stock assessment model implemented in \acrfull{tmb}. As a \acrfull{ssm} the model can be separated into process equations and observation equations. \acrshort{spam} follows the same general process equations design as Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, with the log abundance at age $a$ in a given year $y$, $\log(N_{y,a})$ as 
+The \acrfull{spam} is a state-space stock assessment model implemented in \acrshort{tmb}. As a \acrfull{ssm} the model can be separated into process equations and observation equations. \acrshort{spam} follows the same general process equations design as Nielsen and Berg\cite{Nielsen2014Estimation-of-t}, with the log abundance at age $a$ in a given year $y$, $\log(N_{y,a})$ as 
 \begin{equation}\label{Nrec}
   \log(N_{y,R}) = \log(\text{SR})) + \eta_{y,R}, \quad \ \eta_{y,R} \sim \mathcal{N}(0,\sigma_R^2) \quad R < a ,
 \end{equation}
@@ -222,8 +225,19 @@ Danny Ings also informed me that the provided \acrshort{dfo} stock weights are j
 
 \section{Model Analysis}
 
-There are too many possible options in \acrshort{spam} to evaluate all of them directly. To narrow down a set of candidate model options, I ran \acrshort{spam} once for every possible option of covariance matrix for the $\bm{F}_y$ random walk and the catch \acrshort{crl}s along with the four possible recruitment options on a single specified mapping of vector parameters shown in table \ref{candTable} with the set of medium landing bounds from Table \ref{landTable}. These choices were somewhat subjective, one common standard deviation parameter was used for the \acrshort{CRL} as more than one seemed to result in extremely large confidence intervals for the time period with no survey data. The \acrfull{aic}, \acrfull{bic}, log-likelihood, time elapsed and convergence status were recorded. 71 of the 100 model runs resulted in relative convergance while the remaining 39 resulted in false or singular convergence and were removed from contention. The top performing models were those that used the custom correlation structure for both the $\bm{F}_y$ random walk and the catch \acrshort{crl}s with different recruitment options. In order to avoid comparing three almost identical models, I will instead focus on the first, fourth and fifth best models which are listed in Table \ref{modChosen}.
+There are too many possible options in \acrshort{spam} to evaluate all of them directly. To narrow down a candidate model option, I ran \acrshort{spam} once for every possible option of covariance matrix for the $\bm{F}_y$ random walk and the catch \acrshort{crl}s along with the four possible recruitment options on a single specified mapping of vector parameters shown in table \ref{candTable} with the set of medium landing bounds from Table \ref{landTable}. These choices were somewhat subjective and somewhat limited in parameter flexibility to reduce computation time, one common standard deviation parameter was used for the \acrshort{CRL} as more than one seemed to result in extremely large confidence intervals for the time period with no survey data. The \acrfull{aic}, \acrfull{bic}, log-likelihood, time elapsed and convergence status were recorded. 68 of the 100 model runs resulted in relative convergance while the remaining 32 resulted in false or singular convergence and were removed from contention. The top two performing models were those that used the custom correlation structure for both the $\bm{F}_y$ random walk and the catch \acrshort{crl}s with random walk for recruitment and a Beverton-Holt function. These two models had reduction in \acrshort{AIC} of over 80 versus the third best model with an AIC of 4198.403 \& 4205.643 respectively. The worst performing model that converged was parallel correlation structure in both catch \acrshort{CRL}s \& $\bm{F_y}$s with a smooth hockey stick recruitment function. The top performing model had plots and residuals examined to check the fit.
 
+The residuals used in \acrshort{spam} are not standardized Pearson residuals of the form $\frac{y_i-\hat{y_i}}{\sigma_i}$. Standardized Pearson residuals have been shown to be sometimes be misleading and not fully appropriate for \acrshort{ssm}s due to the fact observations are correlated in time\cite{Thygesen2017validation}\cite{aeberhard2018review}. \acrshort{tmb} enables the use of \acrfull{osa} residuals with a some care of how the model is implemented and these are the residuals used in checking \acrshort{spam}. For a series of observations $X_1,...,X_n$, \acrshort{osa} involve the factorization of the joint observations into a series of conditonal distributions given the previous $n-1$ observations like
+\begin{equation}
+  F_n(x_n) = P(X_n \leq x_n | X_1=x_1,...,X_{n-1} = x_{n-1})
+\end{equation}
+Then for continous observations the \acrshort{osa} residuals will be
+\begin{equation}
+  \Phi^{-1}(F_1(X_1)),...,\Phi^{-1}(F_n(X_n))
+\end{equation}
+where $\Phi^{-1}$ is the inverse acrshort{cdf} of the standard normal distribution and the resulting residuals independently and identically distributed standard normal.
+
+Other parameter setups were tried on the top performing model in an attempt to see if performance could be improved. Setting the correlation parameters of age three cod to zero did not improve the fit to the model. Extending the amount of available catchability parameters, number of standard deviations allowed in $\bm{\sigma}_F}$ and $\bm{\sigma}_{CRL}$ and their corresponding correlation parameters did seem to have a positive impact on the model fit. The selected 
 
 % Please add the following required packages to your document preamble:
 % \usepackage{graphicx}
@@ -246,21 +260,6 @@ For Custom for CRL, $\bm{\rho}_{CRL}=(\rho_2=0,\rho_3,\rho_4,\rho_5,\rho_6,\rho_
 \label{candTable}
 \end{table}
 
-% Please add the following required packages to your document preamble:
-% \usepackage{graphicx}
-\begin{table}[]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{llllll}
-Model Name & $\bm{F}$ Covariance Matrix Type & CRL Covariance MatrixType & Recruitment Type & AIC      & BIC      \\
-Model A    & Custom                          & Custom                    & Random Walk      & 4198.403 & 4426.352 \\
-Model B    & AR(1)                           & Custom                    & Ricker           & 4273.728 & 4491.075 \\
-Model C    & Custom                          & AR(1)                     & Random Walk      & 4324.045 & 4530.790
-\end{tabular}%
-}
-\caption{Model options of the first, fourth and fith best performing models from the 100 candidates along with their AIC \& BIC.}
-\label{modChosen}
-\end{table}
 
 
 <<modelA,include=FALSE>>=
@@ -303,13 +302,43 @@ mapA = list(
 
 )
 
-modelA1 <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),sdrep=FALSE,map=mapA,control=list(iter.max=500,eval.max=500))
-rmA1 <- residuals(modelA1)
+modelA1 <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),sdrep=TRUE,map=mapA,control=list(iter.max=500,eval.max=500))
+rmA1 <- residuals(modelA1,"oneStepGeneric")
 
+qPA1 <- qPattern(modelA1$sdr,modelA1$indices)
+
+cA1 <- oneStopPlot(rmA1,"catch")
+RVOA1 <- oneStopPlot(rmA1,"RVOff")
+RVIA1 <- oneStopPlot(rmA1,"RVInOff")
+gA1 <- oneStopPlot(rmA1,"geac")
+fA1 <- oneStopPlot(rmA1,"french")
+lA1 <- oneStopPlot(rmA1,"landings")
+
+cA1r <- oneStopPlot(rmA1,"catch",residuals=TRUE)
+RVOA1r <- oneStopPlot(rmA1,"RVOff",residuals=TRUE)
+RVIA1r <- oneStopPlot(rmA1,"RVInOff",residuals=TRUE)
+gA1r <- oneStopPlot(rmA1,"geac",residuals=TRUE)
+fA1r <- oneStopPlot(rmA1,"french",residuals=TRUE)
+lA1r <- oneStopPlot(rmA1,"landings",residuals=TRUE)
+
+cA1b <- oneStopPlot(rmA1,"catch",bubble=TRUE)
+RVOA1b <- oneStopPlot(rmA1,"RVOff",bubble=TRUE)
+RVIA1b <- oneStopPlot(rmA1,"RVInOff",bubble=TRUE)
+gA1b <- oneStopPlot(rmA1,"geac",bubble=TRUE)
+fA1b <- oneStopPlot(rmA1,"french",bubble=TRUE)
+lA1b <- oneStopPlot(rmA1,"landings",bubble=TRUE)
+
+r4pA <- resid4plot(rmA1)
+r4pA$yplot
+r4pA$cplot
+r4pA$aplot
+r4pA$eplot
+
+ssb <- tsCIplot("log_ssb",modelA1$sdr,1959:2016,exp=TRUE)
 
 @
 
-<<modelB,include=FALSE,cache=TRUE>>=
+<<modelB,include=FALSE>>=
 library(SSM3PS)
 data(rDat)
 
@@ -321,41 +350,96 @@ crls = dat$crls
 param <- dat$param
 data <- dat$data
 
-##Try with q at 6 plus all equal
+##Try with q at 9 plus all equal
 qnames <- unique(na.omit(data.frame(iq=data$iq,qname=indi$qname,sur=indi$survey,age=indi$Age)))
-qnames$age[qnames$age > 6] = 6
+qnames$age[qnames$age > 9] = 9
 qmap = paste0(qnames$sur,qnames$age)
 qmap = factor(qmap)
 param$log_qparm = rep(0,length(unique(na.omit(data$iq))))
 
-data$keyF = c(0,1,2,3,4,rep(5,13-5))
-#data$keyF = c(0:4,5,5,5,5,5,5,5,5)
-data$corflag = 3
+data$keyF = c(0,1,2,3,4,5,6,7,8,8,8,rep(8,13-11))
+data$corflag = 4
 data$corflagCRL = 4
+data$corflag
 param$log_std_logF = rep(0,length(unique(data$keyF)))
 param$log_F = matrix(0,nrow=nrow(data$mat),ncol=length(param$log_std_logF))
 param$rec_parm = numeric(0);
-param$tRhoF = c(0,rep(0.1,5));
-##param$param$tRhoF = c(0,0.0000000001,0.000000001,0.00000001)
+param$tRhoF = c(0,rep(0.1,max(data$keyF)));
 param$tRhoCRL = c(0,rep(0.1,11))
 
 
-mapB = list(
-  tRhoF = factor(c(NA,0,1,2,3,4)),
+mapA = list(
+  tRhoF = factor(c(NA,0,1,2,3,4,5,5,5)),
   log_qparm = qmap,
-  tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5))),
-  log_std_CRL = factor(c("m","m","m","m","m","m","m","m","m","m","m","m")),
+  tRhoCRL = factor(c(NA,0,1,2,3,4,5,5,5,rep(5,12-9))),
+  log_std_CRL = factor(c("xs","s","s","s","m","m","m","l","l","l","l","l")),
   log_std_landings = factor(NA)
 
 )
 
-@ 
+modelA2 <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),sdrep=TRUE,map=mapA,control=list(iter.max=500,eval.max=500))
+rmA2 <- residuals(modelA2)
 
-<<modelC,include=FALSE,cache=TRUE>>=
+ssb2 <- tsCIplot("log_ssb",modelA2$sdr,1959:2016,exp=TRUE)
 
-@ 
+qPA2 <- qPattern(modelA2$sdr,modelA2$indices)
+
+cA2 <- oneStopPlot(rmA2,"catch")
+RVOA2 <- oneStopPlot(rmA2,"RVOff")
+RVIA2 <- oneStopPlot(rmA2,"RVInOff")
+gA2 <- oneStopPlot(rmA2,"geac")
+fA2 <- oneStopPlot(rmA2,"french")
+lA2 <- oneStopPlot(rmA2,"landings")
+
+cA2r <- oneStopPlot(rmA2,"catch",residuals=TRUE)
+RVOA2r <- oneStopPlot(rmA2,"RVOff",residuals=TRUE)
+RVIA2r <- oneStopPlot(rmA2,"RVInOff",residuals=TRUE)
+gA2r <- oneStopPlot(rmA2,"geac",residuals=TRUE)
+fA2r <- oneStopPlot(rmA2,"french",residuals=TRUE)
+lA2r <- oneStopPlot(rmA2,"landings",residuals=TRUE)
+
+cA2b <- oneStopPlot(rmA2,"catch",bubble=TRUE)
+RVOA2b <- oneStopPlot(rmA2,"RVOff",bubble=TRUE)
+RVIA2b <- oneStopPlot(rmA2,"RVInOff",bubble=TRUE)
+gA2b <- oneStopPlot(rmA2,"geac",bubble=TRUE)
+fA2b <- oneStopPlot(rmA2,"french",bubble=TRUE)
+lA2b <- oneStopPlot(rmA2,"landings",bubble=TRUE)
+
+r4pA2 <- resid4plot(rmA2)
+r4pA2$yplot
+r4pA2$cplot
+r4pA2$aplot
+r4pA2$eplot
+
+@
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l}
+$\bm{\sigma}_F=(\sigma_{2,F},\sigma_{3,F},\sigma_{4,F},\sigma_{5,F},\sigma_{6,F},\sigma_{7,F},\sigma_{8,F},\sigma_{9+,F})'$ \\
+$\bm{q_{s}}=(q_{s,2},q_{s,3},q_{s,4},q_{s,5},q_{s,6},q_{s,7},q_{s,8},q_{s,9+})'$                                          \\
+$\bm{\sigma}_{CRL}=\sigma_{2},\sigma_{3,4,5},\sigma_{6,7,8},\sigma_{9+}$                                                      \\
+$\bm{\rho}_F=(\rho_2=0,\rho_3,\rho_4,\rho_5,\rho_6,\rho_{7},\rho_{8})'$          \\
+$\bm{\rho}_{CRL}=(\rho_2=0,\rho_3,\rho_4,\rho_5,\rho_6,\rho_{7})'$         
+\end{tabular}%
+}
+\caption{Mapping of parameter vectors in the selected best model.}
+\label{FMPTable}
+\end{table}
+
+ 
 
 \subsection{Final Model}
+
+The final model selected had a ten year retrospective analysis was performed to see how well the model performed with
+
+<<retroFun,echo>>=
+
+@ 
 
 \begin{appendices}
   \section{Numerically stable logged normal cumulative distribution function derivatives in TMB}\label{astable1}

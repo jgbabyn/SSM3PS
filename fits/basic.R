@@ -60,7 +60,7 @@ modelOpts$BIC <- NA
 modelOpts$logLik <- NA
 modelOpts$message <- NA
 
-for(i in 1:nrow(modelOpts)){
+for(i in 41:nrow(modelOpts)){
     tempD <- data
     tempP <- param
     tempM <- mapL
@@ -94,7 +94,7 @@ for(i in 1:nrow(modelOpts)){
     }
     if(cfCRL == 4){
         tempP$tRhoCRL = c(0,rep(0.1,11))
-        Tempm$tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5)))
+        tempM$tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5)))
     }
 
     ##rec param
