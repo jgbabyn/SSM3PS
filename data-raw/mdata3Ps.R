@@ -100,6 +100,6 @@ fmat[,-1] = fmat[,-1]
 
 rDat = list(surveys=surveys,fstock_wt=fstock_wt,fcomm_wt=fcomm_wt,fmat=fmat,
             catch=catch,DFO_stock_wt=DFO_stock_wt,stock_wt=stock_wt,midy_wt=midy_wt,mat=mat,
-            RVOff=RV_OFF.matrix,RVInOff=RV_IO.matrix,geac=geac,french=frenchSur,landings=landings)
+            RVOff=RV_OFF.matrix,RVInOff=RV_IO.matrix,geac=geac,french=frenchSur,landings=landings,comm_wt=comm_wt)
 usethis::use_data(rDat,overwrite=TRUE)
 
