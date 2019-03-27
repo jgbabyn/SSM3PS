@@ -10,7 +10,7 @@ library(lattice);library(stats4);library(MASS);library(car);library("xtable")
 library(stockassessment)
 
 #load data
-load("C:/Users/ChampagnatJ/Documents/GitHub/SSM3PS/SAM_fit/SAMdata_IO.Rdata")
+load("C:/Users/jchampag/Documents/GitHub/SSM3PS/SAM_fit/SAMdata_IO.Rdata")
 #load("C:/Users/ChampagnatJ/Documents/GitHub/SSM3PS/SAM_fit/SAMdata_OFF.RData")
 
 
@@ -87,13 +87,14 @@ conf$fbarRange <- c(4,9)
 par <- defpar(dat,conf)
 fit <- sam.fit(dat,conf,par)
 
-saveConf (conf , file ="model.cfg") 
-save(fit,file = 'SAM_fit.RData')
-
 #######
 ##ouptput et plot
 #######
-setwd('C:/Users/ChampagnatJ/Documents/GitHub/SSM3PS/SAM_fit')
+setwd('C:/Users/jchampag/Documents/GitHub/SSM3PS/SAM_fit')
+saveConf (conf , file ="model.cfg") 
+save(fit,file = 'SAM_fit.RData')
+
+
 fit1 <-fit
 
 #global plot: SSB,R Fbar
@@ -110,7 +111,7 @@ res1 <-residuals(fit1)
 jpeg(file='residual.step.ahead.jpeg',width=8,height=8,units='in',res=300) ;plot(res1);dev.off()
 
 #join sample residual
-resp <- procres(fit)
+#resp <- procres(fit)
 #windows();plot(resp)
 jpeg(file='residual.resample.jpeg',width=8,height=8,units='in',res=300) ;plot(res1);dev.off()
 
@@ -160,6 +161,7 @@ jpeg(file='leaveout_plot.jpeg',width=6,height=8,units='in',res=300) ;plot(lo);de
 #windows();qtableplot(qtable(fit1))
 jpeg(file='Q.jpeg',width=6,height=8,units='in',res=300) ;qtableplot(qtable(fit1));dev.off()
 
+
 ##SSB plot
 #window();ssbplot(fit1)
 SSB <-as.data.frame(ssbtable(fit1))
@@ -168,6 +170,7 @@ SSB$Est_rel <- SSB$Estimate/SSB[SSB$year==1994,]$Estimate
 SSB$up_rel <- SSB$High/SSB[rownames(SSB)==1994,]$High
 SSB$low_rel <- SSB$Low/SSB[rownames(SSB)==1994,]$Low
 windows();ggplot(SSB)+geom_line(aes(year,Est_rel))+geom_ribbon(aes(year,ymin=low_rel,ymax=up_rel),alpha=0.5)
+
 
 #parameter plot => bof
 #windows();parplot(fit1)
