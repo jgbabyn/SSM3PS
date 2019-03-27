@@ -10,7 +10,7 @@ library(lattice);library(stats4);library(MASS);library(car);library("xtable")
 library(stockassessment)
 
 #load data
-load("C:/Users/ChampagnatJ/Documents/GitHub/SSM3PS/SAM_fit/SAMdata_IO.Rdata")
+load("C:/Users/jchampag/Documents/GitHub/SSM3PS/SAM_fit/SAMdata_IO.Rdata")
 #load("C:/Users/ChampagnatJ/Documents/GitHub/SSM3PS/SAM_fit/SAMdata_OFF.RData")
 
 dat <- setup.sam.data(
@@ -80,13 +80,14 @@ conf$fbarRange <- c(4,6)
 par <- defpar(dat,conf)
 fit <- sam.fit(dat,conf,par)
 
-saveConf (conf , file ="model.cfg") 
-save(fit,file = 'SAM_fit.RData')
-
 #######
 ##ouptput et plot
 #######
-setwd('C:/Users/ChampagnatJ/Documents/GitHub/SSM3PS/SAM_fit')
+setwd('C:/Users/jchampag/Documents/GitHub/SSM3PS/SAM_fit')
+saveConf (conf , file ="model.cfg") 
+save(fit,file = 'SAM_fit.RData')
+
+
 fit1 <-fit
 
 #global plot: SSB,R Fbar
@@ -100,12 +101,12 @@ jpeg(file='correlation_fleet.jpeg',width=8,height=8,units='in',res=300) ;corplot
 #one step ahead residual
 #res1 <-residuals(fit1)
 #windows();plot(res1)
-jpeg(file='step.ahead.residual.jpeg',width=8,height=8,units='in',res=300) ;plot(res1);dev.off()
+jpeg(file='residual.step.ahead.jpeg',width=8,height=8,units='in',res=300) ;plot(res1);dev.off()
 
 #join sample residual
-resp <- procres(fit)
+#resp <- procres(fit)
 #windows();plot(resp)
-jpeg(file='resample.residual.jpeg',width=8,height=8,units='in',res=300) ;plot(res1);dev.off()
+jpeg(file='residual.resample.jpeg',width=8,height=8,units='in',res=300) ;plot(res1);dev.off()
 
 #catch plot
 #windows();catchplot(fit1)
@@ -118,7 +119,7 @@ attributes(surveys)
 jpeg(file='fit_fleet_catch.jpeg',width=8,height=5,units='in',res=300) ;fitplot(fit1,fleets=1);dev.off()
 jpeg(file='fit_fleet_GEAC.jpeg',width=6,height=5,units='in',res=300) ;fitplot(fit1,fleets = 2);dev.off()
 jpeg(file='fit_fleet_ERHAPS.jpeg',width=6,height=5,units='in',res=300) ;fitplot(fit1,fleets = 3);dev.off()
-jpeg(file='fit_fleet_OFF.jpeg',width=6,height=5,units='in',res=300) ;fitplot(fit1,fleets = 4);dev.off()
+jpeg(file='fit_fleet_IO.jpeg',width=6,height=5,units='in',res=300) ;fitplot(fit1,fleets = 4);dev.off()
 
 
 ##Fishing mortality
@@ -148,7 +149,7 @@ jpeg(file='leaveout_plot.jpeg',width=6,height=8,units='in',res=300) ;plot(lo);de
 
 #Quatchabilities
 #windows();qtableplot(qtable(fit1))
-jpeg(file='Q.jpeg',width=6,height=8,units='in',res=300) ;qtableplot(Q);dev.off()
+jpeg(file='Q.jpeg',width=6,height=8,units='in',res=300) ;qtableplot(qtable(fit1));dev.off()
 
 #parameter plot => bof
 #windows();parplot(fit1)
