@@ -237,7 +237,7 @@ Then for continous observations the \acrshort{osa} residuals will be
 \end{equation}
 where $\Phi^{-1}$ is the inverse acrshort{cdf} of the standard normal distribution and the resulting residuals independently and identically distributed standard normal.
 
-Other parameter setups were tried on the top performing model in an attempt to see if performance could be improved. Setting the correlation parameters of age three cod to zero did not improve the fit to the model. Extending the amount of available catchability parameters, number of standard deviations allowed in $\bm{\sigma}_F}$ and $\bm{\sigma}_{CRL}$ and their corresponding correlation parameters did seem to have a positive impact on the model fit. The selected 
+Other parameter setups were tried on the top performing model in an attempt to see if performance could be improved. Setting the correlation parameters of age three cod to zero did not improve the fit to the model. Extending the amount of available catchability parameters, number of standard deviations allowed in $\bm{\sigma}_F}$ and $\bm{\sigma}_{CRL}$ and their corresponding correlation parameters did seem to have a positive impact on the model fit. The selected best model parameter vector mapping are shown in Table \ref{FMPTable}. The better set of parameter mapping reduced the \acrshort{aic} down to 3908.194. The residuals also seem to be marginally improved.
 
 % Please add the following required packages to your document preamble:
 % \usepackage{graphicx}
@@ -433,14 +433,20 @@ $\bm{\rho}_{CRL}=(\rho_2=0,\rho_3,\rho_4,\rho_5,\rho_6,\rho_{7})'$
 
  
 
-\subsection{Final Model}
 
-The final model selected had a ten year retrospective analysis performed to see if any odd patterns emerged as data was removed. 
+The final model selected had a ten year retrospective analysis performed to see if any odd patterns emerged as data was removed. Plots of the ten year retrospective analysis for model predicted \acrshort{ssb},biomass, average fishing mortality ages 4 to 6 and recruitment are shown in Figure \ref{retroFun}. \acrshort{spam} seems to tend to exhibit a pattern of curling upwards as years are removed. 
 
-<<retroFun,echo>>=
+<<retroFun,echo=FALSE,fig.cap="Ten year retropective plots performed SPAM. Confidence intervals are from the final model with all years. SPAM has tendancy to try and recover SSB and Biomass much earlier with less data.">>=
+library(SSM3PS)
+library(ggplot2)
+data(retL)
 
+recP = retL$recRet + ylab("Recruitment (Millions)")
+aveP = retL$aveRet + ylab("Average F 4-6")
+ssbP = retL$ssbRet + ylab("Spawning Stock Biomass (Kt)")
+bioP = retL$bioRet + ylab("Biomass (Kt)")
 
-
+cowplot::plot_grid(ssbP,bioP,recP,aveP,nrow=2,labels=c("SSB","Bio","Rec.","Ave.F"))
 @ 
 
 \begin{appendices}

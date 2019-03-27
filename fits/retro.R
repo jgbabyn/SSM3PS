@@ -89,12 +89,13 @@ usethis::use_data(retL)
 
 ##Jittering the parameters
 
+retro = retL$retro
 final <- retro[[10]]$opt$par
 obj <- retro[[10]]$obj
-jittRun <- list()
+jittRun <- matrix(NA,nrow=100,ncol=63)
 for(i in 1:100){
-    obj$par <- runif(63,-1,1)
+    obj$par <- runif(63,-5,5)
     names(obj$par) = names(final)
     run <- nlminb(obj$par,obj$fn,obj$gr)
-    jittRun[[i]] = all.equal(final,run$par)
+    jittRun[i,] = run$par
 }

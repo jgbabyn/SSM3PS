@@ -71,6 +71,7 @@ r4pA$eplot
 
 ssb <- tsCIplot("log_ssb",modelA1$sdr,1959:2016,exp=TRUE)
 
-topMod <- list(fit=modelA1,resid=rmA1)
+bR = residuals(modelA1)
+topMod <- list(fit=modelA1,resid=rmA1,bR=bR)
 
-usethis::use_data(topMod)
+usethis::use_data(topMod,overwrite=TRUE)

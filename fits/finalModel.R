@@ -70,7 +70,9 @@ r4pA2$cplot
 r4pA2$aplot
 r4pA2$eplot
 
-finMod <- list(fit=modelA2,resid=rmA2)
+##For plotting
+bR = residuals(modelA2)
+finMod <- list(fit=modelA2,resid=rmA2,bR=bR)
 
 
-usethis::use_data(finMod)
+usethis::use_data(finMod,overwrite=TRUE)
