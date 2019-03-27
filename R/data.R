@@ -14,3 +14,15 @@
 #' running SPAM 100 times on a specfic set parameters, this was done with every possible option
 #' of correlation type for F and CRL along with the different recruitment curve options
 "modelOpts"
+
+#'The top chosen model, residuals, data, etc.
+#'
+"topMod"
+
+#'The final chosen model
+#'
+"finMod"
+
+#'Retrospective plots and retro stuff
+#'
+"retL"
