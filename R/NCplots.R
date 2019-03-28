@@ -39,12 +39,12 @@ tsCIplot <- function(sName,sd.rep,years,alpha=0.05,exp=FALSE,add=FALSE,color="bl
     
         
 
-    pRet = ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x=year,y=val),dat,color=color) +
-        ggplot2::geom_ribbon(ggplot2::aes(x=year,ymin=low,ymax=high),dat,fill=fcolor,alpha=0.3)
+    pRet = ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x=year,y=val,color=color),dat) +
+        ggplot2::geom_ribbon(ggplot2::aes(x=year,ymin=low,ymax=high,fill=fcolor),dat,alpha=0.3)
 
     if(add==TRUE){
-        pRet = list(line = ggplot2::geom_line(ggplot2::aes(x=year,y=val),dat,color=color),
-                    ribbon = ggplot2::geom_ribbon(ggplot2::aes(x=year,ymin=low,ymax=high),dat,alpha=0.3),fill=fcolor)
+        pRet = list(line = ggplot2::geom_line(ggplot2::aes(x=year,y=val,color=color),dat),
+                    ribbon = ggplot2::geom_ribbon(ggplot2::aes(x=year,ymin=low,ymax=high,fill=fcolor),dat,alpha=0.3))
     }
     
     

@@ -260,9 +260,10 @@ ssblfo <- tsCIplot("log_ssb",retro[[10]]$sdr,1959:2016,exp=TRUE)
 biolfo <- tsCIplot("log_biomass",retro[[10]]$sdr,1959:2016,exp=TRUE)
 avelfo <- tsCIplot("log_aveFXY",retro[[10]]$sdr,1959:2016,exp=TRUE)
 reclfo <- tsCIplot("log_N",trec,1959:2016,exp=TRUE)
+colls <- c("green","red","blue","orange")
 
 for(i in 1:4){
-    colr = sample(colors(),1)
+    colr = colls[i]
 
     summ <- summary(cva[[i]]$sdr)
     ind = which(rownames(summ) == "log_N")
@@ -284,7 +285,7 @@ for(i in 1:4){
 }
 
 lfo = list(ssblfo=ssblfo,biolfo=biolfo,avelfo=avelfo,reclfo=reclfo)
-usethis::use_data(lfo)
+usethis::use_data(lfo,overwrite=TRUE)
 
 ##Bounds testing
 landMed <- as.data.frame(rDat$landings)
@@ -526,8 +527,7 @@ fwts2 <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),sdrep=TRUE,map=m
 
 
 ##Eyeballed points from 2017 3Ps relSSB resdoc
-eyepts <- c(1.5,1.55,1.7,1.65,1.6,1.7,1.95,1.8,1.45,1.25,1.05,1,1.4,1.45,1.25,1.3,1.5,1.6,1.65,1.95,2.25,2.26,1.95,1.4,1.25,1.05,0.95,1.1,1.6,
-            1.75,1.4,1.1,1.2)
+eyepts <- c(1.5,1.55,1.7,1.65,1.6,1.7,1.95,1.8,1.45,1.25,1.05,1,1.4,1.45,1.25,1.3,1.5,1.6,1.65,1.95,2.25,2.26,1.95,1.4,1.25,1.05,0.95,1.1,1.6,1.75,1.4,1.1,1.2)
 yearE = c(1983:2005,2007:2016)
 relpts = data.frame(eyepts,Year=yearE)
 plot(yearE,eyepts,ylim=c(0,3.5),type="l")
@@ -538,7 +538,22 @@ relSSB <- tsCIplot("log_ssb",retro[[10]]$sdr,1959:2016,relYear=1994)
 relSSBo <- tsCIplot("log_ssb",fwts$sdr,1959:2016,relYear=1994,color="red",fcolor="red",add=TRUE)
 relSSBo2 <- tsCIplot("log_ssb",fwts2$sdr,1959:2016,relYear=1994,color="blue",fcolor="blue",add=TRUE)
 relSSB <- relSSB + relSSBo$line + relSSBo2$line
-relSSB <- relSSB + geom_line(aes(Year,eyepts),relpts) + geom_point(aes(Year,eyepts),relpts) +geom_hline(yintercept=1,linetype="dashed")
-relSSB <- relSSB + geom_hline(yintercept=2,linetype="dashed") + ylab("Relative SSB to 1994")
+relSSB <- relSSB + geom_line(aes(Year,eyepts,color="orange"),relpts) + geom_point(aes(Year,eyepts,color="orange"),relpts) +geom_hline(yintercept=1,linetype="dashed")
+relSSB <- relSSB + geom_hline(yintercept=2,linetype="dashed") + ylab("Relative SSB to 1994") + guides(fill=FALSE)
+relSSB <- relSSB + scale_color_manual(label=c("FPCA wts. + FPCA mat.","Provided Wts. + FPCA mat.","DFO SURBA","Provided Wts. + Mat."),
+                                      values=c("red","blue","black","orange"))
 
-usethis::use_data(relSSB)
+usethis::use_data(relSSB,overwrite=TRUE)
+
+absSSB <- tsCIplot("log_ssb",retro[[10]]$sdr,1959:2016,exp=TRUE)
+absSSBo <- tsCIplot("log_ssb",fwts$sdr,1959:2016,exp=TRUE,color="red",fcolor="red",add=TRUE)
+absSSBo2 <- tsCIplot("log_ssb",fwts2$sdr,1959:2016,exp=TRUE,color="blue",fcolor="blue",add=TRUE)
+absSSB <- absSSB + absSSBo$line + absSSBo2$line + ylab("SSB (Kt)") + guides(fill=FALSE)
+absSSB <- absSSB + scale_color_manual(label=c("FPCA wts. + FPCA mat.","Provided Wts. + FPCA mat.","Provided Wts. + Mat."),
+                                      values=c("red","blue","orange"))
+
+
+usethis::use_data(absSSB)
+
+fwgtss <- list(f1=fwts,f2=fwts2)
+usethis::use_data(fwgtss)

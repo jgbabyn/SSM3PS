@@ -4,7 +4,7 @@
 \name{rDat}
 \alias{rDat}
 \title{Data readin and used}
-\format{An object of class \code{list} of length 14.}
+\format{An object of class \code{list} of length 15.}
 \usage{
 rDat
 }

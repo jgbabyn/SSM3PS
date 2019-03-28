@@ -216,7 +216,7 @@ Two important pieces for the model are the weights used and maturity ogives. The
 
 Both the maturities and weights were smoothed using \acrfull{fpca}. \acrshort{fpca} is a non-parametric technique that has been used to perform noise reduction on curve like data\cite{ramsay2007applied}. \acrshort{fpca} has at least been at least applied to fisheries data in the context of evaluating spatio-temporal patterns in the data\cite{embling_2012} but it has not to the author's knowledge been applied to fisheries weight or growth data. The noise reduction is done by breaking the data down into it's mean function $\mu(t)$, eigenfunctions $\phi_k(t)$ and \acrfull{fpc}, $\xi_{ki}$ and keeping only the number of \acrshort{fpc}s that explain most of the variation in the data.  Further details on \acrshort{fpca} and this process can be seen in Appendix \ref{afpca}.
 
-For the maturities, the logit was taken and the \acrshort{fpca} performed in logit space to ensure that maturity proportions would continue to lie between 0 and 1 after smoothing. The FPCA was performed with each age group being considered an observation measured at each year. Smoothing was allowed on the mean function and a user selected bandwidth of 14 was chosen which removed many of the peaks and valleys. The diagnostic plots of the \acrshort{fpca} performed on the maturities showcasing the mean function, first three eigenfunctions, fraction of variance explained by each \acrshort{fpc} are seen in Figure \ref{fig:matFPCAd}. Over 90\% of the variance is explained by the first \acrshort{fpc}, because of this only the first \acrshort{fpc} was used in creating the smoothed data. Plots comparing the smoothed and raw versions of the maturities by age and year are in Figure \ref{matFPCAp}.
+For the maturities, the logit was taken and the \acrshort{fpca} performed in logit space to ensure that maturity proportions would continue to lie between 0 and 1 after smoothing. The FPCA was performed with each age group being considered an observation measured at each year. Smoothing was allowed on the mean function and a user selected bandwidth of 14 was chosen which removed many of the peaks and valleys. The diagnostic plots of the \acrshort{fpca} performed on the maturities showcasing the mean function, first three eigenfunctions, fraction of variance explained by each \acrshort{fpc} are seen in Figure \ref{fig:matFPCAd}. Over 90\% of the variance is explained by the first \acrshort{fpc}, because of this only the first \acrshort{fpc} was used in creating the smoothed data. Plots comparing the smoothed and raw versions of the maturities by age and year are in Figure \ref{matFPCAp}. The smoothed maturities do seem to have increased too much for some ages than what actually occured in reality. This impact will be examined further in section
 
 For the weights the years were treated as observations and the age groups as measurement points. Here the mean function was automatically smoothed using \acrfull{gcv}. The diagnostic plots for the FPCA on the commercial weights are in Figure \ref{fig:weightFPCAd}. As the commerical weights represent mid-year weights, the points were placed on a grid at half year intervals, e.g. the weights for fish that are aged 3.5 years. Looking at the smoothed commerical weights I noticed that the main bulk of the data appeared to be broken into two groups and could be mostly split into data pre and post 1994. This trend is also noticable in the original data but not as clearly. There was a shift in gear types towards gillnets in 3Ps in 1994, however that should result in the opposite trend with commercial weights increasing if this was the cause. Low sampling numbers would most likely not explain this either, as a $20+$ year sustained downward bias would be unlikely. There is the possibility that there has been a change in how the aging has been done either with pre-1994 cod otolith readers underestimating ages or post-1994 readers overestimating ages. This change also occurs during the period when the stock collapsed and it is possible that this is somehow related as well. Danny Ings told me \acrshort{dfo} is aware of the issue but is not sure of the exact cause either when I consulted him about it.  
 
@@ -225,9 +225,9 @@ Danny Ings also informed me that the provided \acrshort{dfo} stock weights are j
 
 \section{Model Analysis}
 
-There are too many possible options in \acrshort{spam} to evaluate all of them directly. To narrow down a candidate model option, I ran \acrshort{spam} once for every possible option of covariance matrix for the $\bm{F}_y$ random walk and the catch \acrshort{crl}s along with the four possible recruitment options on a single specified mapping of vector parameters shown in table \ref{candTable} with the set of medium landing bounds from Table \ref{landTable}. These choices were somewhat subjective and somewhat limited in parameter flexibility to reduce computation time, one common standard deviation parameter was used for the \acrshort{CRL} as more than one seemed to result in extremely large confidence intervals for the time period with no survey data. The \acrfull{aic}, \acrfull{bic}, log-likelihood, time elapsed and convergence status were recorded. 68 of the 100 model runs resulted in relative convergance while the remaining 32 resulted in false or singular convergence and were removed from contention. The top two performing models were those that used the custom correlation structure for both the $\bm{F}_y$ random walk and the catch \acrshort{crl}s with random walk for recruitment and a Beverton-Holt function. These two models had reduction in \acrshort{AIC} of over 80 versus the third best model with an AIC of 4198.403 \& 4205.643 respectively. The worst performing model that converged was parallel correlation structure in both catch \acrshort{CRL}s \& $\bm{F_y}$s with a smooth hockey stick recruitment function. The top performing model had plots and residuals examined to check the fit.
+There are too many possible options in \acrshort{spam} to evaluate all of them directly. To narrow down a candidate model option, I ran \acrshort{spam} once for every possible option of covariance matrix for the $\bm{F}_y$ random walk and the catch \acrshort{crl}s along with the four possible recruitment options on a single specified mapping of vector parameters shown in table \ref{candTable} with the set of medium landing bounds from Table \ref{landTable}. These choices were somewhat subjective and somewhat limited in parameter flexibility to reduce computation time, one common standard deviation parameter was used for the \acrshort{crl} as more than one seemed to result in extremely large confidence intervals for the time period with no survey data. The \acrfull{aic}, \acrfull{bic}, log-likelihood, time elapsed and convergence status were recorded. 68 of the 100 model runs resulted in relative convergance while the remaining 32 resulted in false or singular convergence and were removed from contention. The top two performing models were those that used the custom correlation structure for both the $\bm{F}_y$ random walk and the catch \acrshort{crl}s with random walk for recruitment and a Beverton-Holt function. These two models had reduction in \acrshort{aic} of over 80 versus the third best model with an AIC of 4198.403 \& 4205.643 respectively. The worst performing model that converged was parallel correlation structure in both catch \acrshort{CRL}s \& $\bm{F_y}$s with a smooth hockey stick recruitment function. The top performing model had plots and residuals examined to check the fit.
 
-The residuals used in \acrshort{spam} are not standardized Pearson residuals of the form $\frac{y_i-\hat{y_i}}{\sigma_i}$. Standardized Pearson residuals have been shown to be sometimes be misleading and not fully appropriate for \acrshort{ssm}s due to the fact observations are correlated in time\cite{Thygesen2017validation}\cite{aeberhard2018review}. \acrshort{tmb} enables the use of \acrfull{osa} residuals with a some care of how the model is implemented and these are the residuals used in checking \acrshort{spam}. For a series of observations $X_1,...,X_n$, \acrshort{osa} involve the factorization of the joint observations into a series of conditonal distributions given the previous $n-1$ observations like
+The residuals used in \acrshort{spam} for the observation equations are not standardized Pearson residuals of the form $\frac{y_i-\hat{y_i}}{\sigma_i}$. Standardized Pearson residuals have been shown to be sometimes be misleading and not fully appropriate for \acrshort{ssm}s due to the fact observations are correlated in time\cite{Thygesen2017validation}\cite{aeberhard2018review}. \acrshort{tmb} enables the use of \acrfull{osa} residuals with a some care of how the model is implemented and these are the residuals used in checking \acrshort{spam}. For a series of observations $X_1,...,X_n$, \acrshort{osa} involve the factorization of the joint observations into a series of conditonal distributions given the previous $n-1$ observations like
 \begin{equation}
   F_n(x_n) = P(X_n \leq x_n | X_1=x_1,...,X_{n-1} = x_{n-1})
 \end{equation}
@@ -235,9 +235,9 @@ Then for continous observations the \acrshort{osa} residuals will be
 \begin{equation}
   \Phi^{-1}(F_1(X_1)),...,\Phi^{-1}(F_n(X_n))
 \end{equation}
-where $\Phi^{-1}$ is the inverse acrshort{cdf} of the standard normal distribution and the resulting residuals independently and identically distributed standard normal.
+where $\Phi^{-1}$ is the inverse acrshort{cdf} of the standard normal distribution and the resulting residuals independently and identically distributed standard normal. The residuals used for evaluating the process equations are joint sample residuals which for some predicted random effects $U$ which is jointly distributed with joint pdf $L(y,u)$ with the observations $Y$ where $y$ is a sample from the marginal distribution of $L(y,u)$. Generating a single sample $u*$ from $U|Y=y$, $u*$ can be used to check the distribution of $U$\cite{Thygesen2017validation}. 
 
-Other parameter setups were tried on the top performing model in an attempt to see if performance could be improved. Setting the correlation parameters of age three cod to zero did not improve the fit to the model. Extending the amount of available catchability parameters, number of standard deviations allowed in $\bm{\sigma}_F}$ and $\bm{\sigma}_{CRL}$ and their corresponding correlation parameters did seem to have a positive impact on the model fit. The selected best model parameter vector mapping are shown in Table \ref{FMPTable}. The better set of parameter mapping reduced the \acrshort{aic} down to 3908.194. The residuals also seem to be marginally improved.
+Other parameter setups were tried on the top performing model in an attempt to see if performance could be improved. Setting the correlation parameters of age three cod to zero did not improve the fit to the model. Extending the amount of available catchability parameters, number of standard deviations allowed in $\bm{\sigma}_F}$ and $\bm{\sigma}_{CRL}$ and their corresponding correlation parameters did seem to have a positive impact on the model fit. The selected best model parameter vector mapping are shown in Table \ref{FMPTable}. The better set of parameter mapping reduced the \acrshort{aic} down to 3908.194. The residuals also seem to be marginally improved and are compared to the candidate model, .
 
 % Please add the following required packages to your document preamble:
 % \usepackage{graphicx}
@@ -264,148 +264,69 @@ For Custom for CRL, $\bm{\rho}_{CRL}=(\rho_2=0,\rho_3,\rho_4,\rho_5,\rho_6,\rho_
 
 <<modelA,include=FALSE>>=
 library(SSM3PS)
-data(rDat)
+data(topMod)
 
-dat <- datSetup(rDat$surveys,rDat$landings,rDat$fstock_wt,rDat$fcomm_wt,mat=rDat$fmat,
-                age=2:16,years=1959:2016,plusGroup=14)
+qPA1 <- qPattern(topMod$fit$sdr,topMod$fit$indices)
 
-indi = dat$indices
-crls = dat$crls
-param <- dat$param
-data <- dat$data
+cA1 <- oneStopPlot(topMod$bR,"catch")
+RVOA1 <- oneStopPlot(topMod$bR,"RVOff")
+RVIA1 <- oneStopPlot(topMod$bR,"RVInOff")
+gA1 <- oneStopPlot(topMod$bR,"geac")
+fA1 <- oneStopPlot(topMod$bR,"french")
+lA1 <- oneStopPlot(topMod$bR,"landings")
 
-##Try with q at 6 plus all equal
-qnames <- unique(na.omit(data.frame(iq=data$iq,qname=indi$qname,sur=indi$survey,age=indi$Age)))
-qnames$age[qnames$age > 6] = 6
-qmap = paste0(qnames$sur,qnames$age)
-qmap = factor(qmap)
-param$log_qparm = rep(0,length(unique(na.omit(data$iq))))
+cA1r <- oneStopPlot(topMod$resid,"catch",residuals=TRUE)
+RVOA1r <- oneStopPlot(topMod$resid,"RVOff",residuals=TRUE)
+RVIA1r <- oneStopPlot(topMod$resid,"RVInOff",residuals=TRUE)
+gA1r <- oneStopPlot(topMod$resid,"geac",residuals=TRUE)
+fA1r <- oneStopPlot(topMod$resid,"french",residuals=TRUE)
+lA1r <- oneStopPlot(topMod$resid,"landings",residuals=TRUE)
 
-data$keyF = c(0,1,2,3,4,rep(5,13-5))
-#data$keyF = c(0:4,5,5,5,5,5,5,5,5)
-data$corflag = 4
-data$corflagCRL = 4
-param$log_std_logF = rep(0,length(unique(data$keyF)))
-param$log_F = matrix(0,nrow=nrow(data$mat),ncol=length(param$log_std_logF))
-param$rec_parm = numeric(0);
-param$tRhoF = c(0,rep(0.1,5));
-##param$param$tRhoF = c(0,0.0000000001,0.000000001,0.00000001)
-param$tRhoCRL = c(0,rep(0.1,11))
+cA1b <- oneStopPlot(topMod$resid,"catch",bubble=TRUE)
+RVOA1b <- oneStopPlot(topMod$resid,"RVOff",bubble=TRUE)
+RVIA1b <- oneStopPlot(topMod$resid,"RVInOff",bubble=TRUE)
+gA1b <- oneStopPlot(topMod$resid,"geac",bubble=TRUE)
+fA1b <- oneStopPlot(topMod$resid,"french",bubble=TRUE)
+lA1b <- oneStopPlot(topMod$resid,"landings",bubble=TRUE)
 
-
-mapA = list(
-  tRhoF = factor(c(NA,0,1,2,3,4)),
-  log_qparm = qmap,
-  tRhoCRL = factor(c(NA,0,1,2,3,rep(4,12-5))),
-  log_std_CRL = factor(c("m","m","m","m","m","m","m","m","m","m","m","m")),
-  log_std_landings = factor(NA)
-
-)
-
-modelA1 <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),sdrep=TRUE,map=mapA,control=list(iter.max=500,eval.max=500))
-rmA1 <- residuals(modelA1,"oneStepGeneric")
-
-qPA1 <- qPattern(modelA1$sdr,modelA1$indices)
-
-cA1 <- oneStopPlot(rmA1,"catch")
-RVOA1 <- oneStopPlot(rmA1,"RVOff")
-RVIA1 <- oneStopPlot(rmA1,"RVInOff")
-gA1 <- oneStopPlot(rmA1,"geac")
-fA1 <- oneStopPlot(rmA1,"french")
-lA1 <- oneStopPlot(rmA1,"landings")
-
-cA1r <- oneStopPlot(rmA1,"catch",residuals=TRUE)
-RVOA1r <- oneStopPlot(rmA1,"RVOff",residuals=TRUE)
-RVIA1r <- oneStopPlot(rmA1,"RVInOff",residuals=TRUE)
-gA1r <- oneStopPlot(rmA1,"geac",residuals=TRUE)
-fA1r <- oneStopPlot(rmA1,"french",residuals=TRUE)
-lA1r <- oneStopPlot(rmA1,"landings",residuals=TRUE)
-
-cA1b <- oneStopPlot(rmA1,"catch",bubble=TRUE)
-RVOA1b <- oneStopPlot(rmA1,"RVOff",bubble=TRUE)
-RVIA1b <- oneStopPlot(rmA1,"RVInOff",bubble=TRUE)
-gA1b <- oneStopPlot(rmA1,"geac",bubble=TRUE)
-fA1b <- oneStopPlot(rmA1,"french",bubble=TRUE)
-lA1b <- oneStopPlot(rmA1,"landings",bubble=TRUE)
-
-r4pA <- resid4plot(rmA1)
+r4pA <- resid4plot(topMod$resid)
 r4pA$yplot
 r4pA$cplot
 r4pA$aplot
 r4pA$eplot
 
-ssb <- tsCIplot("log_ssb",modelA1$sdr,1959:2016,exp=TRUE)
+ssb <- tsCIplot("log_ssb",topMod$fit$sdr,1959:2016,exp=TRUE)
 
 @
 
 <<modelB,include=FALSE>>=
 library(SSM3PS)
-data(rDat)
+data(finMod)
 
-dat <- datSetup(rDat$surveys,rDat$landings,rDat$fstock_wt,rDat$fcomm_wt,mat=rDat$fmat,
-                age=2:16,years=1959:2016,plusGroup=14)
+qPA2 <- qPattern(finMod$fit$sdr,finMod$fit$indices)
 
-indi = dat$indices
-crls = dat$crls
-param <- dat$param
-data <- dat$data
+cA2 <- oneStopPlot(finMod$bR,"catch")
+RVOA2 <- oneStopPlot(finMod$bR,"RVOff")
+RVIA2 <- oneStopPlot(finMod$bR,"RVInOff")
+gA2 <- oneStopPlot(finMod$bR,"geac")
+fA2 <- oneStopPlot(finMod$bR,"french")
+lA2 <- oneStopPlot(finMod$bR,"landings")
 
-##Try with q at 9 plus all equal
-qnames <- unique(na.omit(data.frame(iq=data$iq,qname=indi$qname,sur=indi$survey,age=indi$Age)))
-qnames$age[qnames$age > 9] = 9
-qmap = paste0(qnames$sur,qnames$age)
-qmap = factor(qmap)
-param$log_qparm = rep(0,length(unique(na.omit(data$iq))))
+cA2r <- oneStopPlot(finMod$resid,"catch",residuals=TRUE)
+RVOA2r <- oneStopPlot(finMod$resid,"RVOff",residuals=TRUE)
+RVIA2r <- oneStopPlot(finMod$resid,"RVInOff",residuals=TRUE)
+gA2r <- oneStopPlot(finMod$resid,"geac",residuals=TRUE)
+fA2r <- oneStopPlot(finMod$resid,"french",residuals=TRUE)
+lA2r <- oneStopPlot(finMod$resid,"landings",residuals=TRUE)
 
-data$keyF = c(0,1,2,3,4,5,6,7,8,8,8,rep(8,13-11))
-data$corflag = 4
-data$corflagCRL = 4
-data$corflag
-param$log_std_logF = rep(0,length(unique(data$keyF)))
-param$log_F = matrix(0,nrow=nrow(data$mat),ncol=length(param$log_std_logF))
-param$rec_parm = numeric(0);
-param$tRhoF = c(0,rep(0.1,max(data$keyF)));
-param$tRhoCRL = c(0,rep(0.1,11))
+cA2b <- oneStopPlot(finMod$resid,"catch",bubble=TRUE)
+RVOA2b <- oneStopPlot(finMod$resid,"RVOff",bubble=TRUE)
+RVIA2b <- oneStopPlot(finMod$resid,"RVInOff",bubble=TRUE)
+gA2b <- oneStopPlot(finMod$resid,"geac",bubble=TRUE)
+fA2b <- oneStopPlot(finMod$resid,"french",bubble=TRUE)
+lA2b <- oneStopPlot(finMod$resid,"landings",bubble=TRUE)
 
-
-mapA = list(
-  tRhoF = factor(c(NA,0,1,2,3,4,5,5,5)),
-  log_qparm = qmap,
-  tRhoCRL = factor(c(NA,0,1,2,3,4,5,5,5,rep(5,12-9))),
-  log_std_CRL = factor(c("xs","s","s","s","m","m","m","l","l","l","l","l")),
-  log_std_landings = factor(NA)
-
-)
-
-modelA2 <- spamFit(data,param,indi,crls,random=c("log_N","log_F"),sdrep=TRUE,map=mapA,control=list(iter.max=500,eval.max=500))
-rmA2 <- residuals(modelA2)
-
-ssb2 <- tsCIplot("log_ssb",modelA2$sdr,1959:2016,exp=TRUE)
-
-qPA2 <- qPattern(modelA2$sdr,modelA2$indices)
-
-cA2 <- oneStopPlot(rmA2,"catch")
-RVOA2 <- oneStopPlot(rmA2,"RVOff")
-RVIA2 <- oneStopPlot(rmA2,"RVInOff")
-gA2 <- oneStopPlot(rmA2,"geac")
-fA2 <- oneStopPlot(rmA2,"french")
-lA2 <- oneStopPlot(rmA2,"landings")
-
-cA2r <- oneStopPlot(rmA2,"catch",residuals=TRUE)
-RVOA2r <- oneStopPlot(rmA2,"RVOff",residuals=TRUE)
-RVIA2r <- oneStopPlot(rmA2,"RVInOff",residuals=TRUE)
-gA2r <- oneStopPlot(rmA2,"geac",residuals=TRUE)
-fA2r <- oneStopPlot(rmA2,"french",residuals=TRUE)
-lA2r <- oneStopPlot(rmA2,"landings",residuals=TRUE)
-
-cA2b <- oneStopPlot(rmA2,"catch",bubble=TRUE)
-RVOA2b <- oneStopPlot(rmA2,"RVOff",bubble=TRUE)
-RVIA2b <- oneStopPlot(rmA2,"RVInOff",bubble=TRUE)
-gA2b <- oneStopPlot(rmA2,"geac",bubble=TRUE)
-fA2b <- oneStopPlot(rmA2,"french",bubble=TRUE)
-lA2b <- oneStopPlot(rmA2,"landings",bubble=TRUE)
-
-r4pA2 <- resid4plot(rmA2)
+r4pA2 <- resid4plot(finMod$resid)
 r4pA2$yplot
 r4pA2$cplot
 r4pA2$aplot
@@ -434,7 +355,7 @@ $\bm{\rho}_{CRL}=(\rho_2=0,\rho_3,\rho_4,\rho_5,\rho_6,\rho_{7})'$
  
 
 
-The final model selected had a ten year retrospective analysis performed to see if any odd patterns emerged as data was removed. Plots of the ten year retrospective analysis for model predicted \acrshort{ssb},biomass, average fishing mortality ages 4 to 6 and recruitment are shown in Figure \ref{retroFun}. \acrshort{spam} seems to tend to exhibit a pattern of curling upwards as years are removed. 
+The final model selected had a ten year retrospective analysis performed to see if any odd patterns emerged as data was removed. Plots of the ten year retrospective analysis for model predicted \acrshort{ssb},biomass, average fishing mortality ages 4 to 6 and recruitment are shown in Figure \ref{retroFun}. \acrshort{spam} seems to tend to exhibit a pattern of curling upwards as years are removed. Leave one fleet out analysis was also conducted removing one survey fleet at a time and rerunning the model to see if any one of them has a large influence on the results.  
 
 <<retroFun,echo=FALSE,fig.cap="Ten year retropective plots performed SPAM. Confidence intervals are from the final model with all years. SPAM has tendancy to try and recover SSB and Biomass much earlier with less data.">>=
 library(SSM3PS)
@@ -447,6 +368,19 @@ ssbP = retL$ssbRet + ylab("Spawning Stock Biomass (Kt)")
 bioP = retL$bioRet + ylab("Biomass (Kt)")
 
 cowplot::plot_grid(ssbP,bioP,recP,aveP,nrow=2,labels=c("SSB","Bio","Rec.","Ave.F"))
+@
+
+<<lfoPlot,echo=FALSE,fig.cap="Plots resulting from leave one fleet out analysis. Removing the DFO RV Inshore and Offshore (Orange Line) has the largest impact on results reversing the upward trend seen in later years.">>=
+library(SSM3PS)
+library(ggplot2)
+data(lfo)
+
+recl = lfo$reclfo + ylab("Recruitment (Millions)")
+avel = lfo$avelfo + ylab("Average F 4-6")
+ssbl = lfo$ssblfo + ylab("Spawning Stock Biomass (Kt)")
+biol = lfo$biolfo + ylab("Biomass (Kt)")
+
+cowplot::plot_grid(ssbl,biol,recl,avel,nrow=2,labels=c("SSB","Bio","Rec.","Ave.F"))
 @ 
 
 \begin{appendices}

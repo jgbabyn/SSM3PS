@@ -72,7 +72,12 @@ r4pA2$eplot
 
 ##For plotting
 bR = residuals(modelA2)
-finMod <- list(fit=modelA2,resid=rmA2,bR=bR)
+##Joint process residuals for random parameters
+indF = which(names(modelA2$sdr$value) == "resF")
+resF <- MASS::mvrnorm(1,modelA2$sdr$value[indF],modelA2$sdr$cov[indF,indF])
+indN = which(names(modelA2$sdr$value) == "resN")
+resN <- MASS::mvrnorm(1,modelA2$sdr$value[indN],modelA2$sdr$cov[indN,indN])
 
+finMod <- list(fit=modelA2,resid=rmA2,bR=bR,resF=resF,resN=resN)
 
 usethis::use_data(finMod,overwrite=TRUE)

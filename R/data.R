@@ -26,3 +26,22 @@
 #'Retrospective plots and retro stuff
 #'
 "retL"
+
+#'The leave one fleet out
+#'
+"lfo"
+
+#'Relative SSB
+"relSSB"
+
+#'Bounds testings
+"mboundSSB"
+
+#'landing bounds plot
+"landBoundP"
+
+#'absolute SSB plot
+"absSSB"
+
+#'weight rerun stuff
+"fwgtss"

@@ -195,8 +195,31 @@ Type objective_function<Type>::operator() ()
   vector<Type> log_ssb = log(ssb);       
 
 
+  //crud for process residuals, could probably reuse sigmaFgen again but eh.
+  array<Type> resN(A,Y-1);
+  matrix<Type> nSig(A,A);
+  for(int i = 0; i < A;i++){
+    for(int j = 0; j < A;j++){
+      if(i != j){
+	nSig(i,j) = 0;
+      }else{
+	if(i == 0){
+	  nSig(i,j) = std_log_R*std_log_R;
+	}else{
+	  nSig(i,j) = sdS*sdS;
+	}
+      }
+    }
+  }
+
+  //This is the approach SAM takes to get joint sample process residuals
+  Eigen::LLT< Matrix<Type, Eigen::Dynamic, Eigen::Dynamic> > lltCovN(nSig);
+  matrix<Type> LN = lltCovN.matrixL();
+  matrix<Type> LinvN = LN.inverse();
+  
 
   //Recruitment, adding recruitment curves much easier because ssb is already available and will be optimized later
+  matrix<Type> mpredN(Y,A);
   Type predN;
   for(int y =1;y < Y;y++){
     switch(recflag){
@@ -216,11 +239,11 @@ Type objective_function<Type>::operator() ()
       error("Not right rec type");
       break;
     }
-    
+    mpredN(y,0) = predN;
     nll -= dnorm(log_N(y,0),predN,std_log_R,true);
   }
 
-
+      
   //Fill in N, add survival process
   for(int y = 1;y < Y;++y){
     for(int a = 1;a < A;++a){
@@ -228,19 +251,31 @@ Type objective_function<Type>::operator() ()
       if(a == A-1){//Plus group
 	predN = logspace_add(predN,log_N(y-1,a)-Z(y-1,a));
       }
+      mpredN(y,a) = predN;
       nll -= dnorm(log_N(y,a),predN,sdS,true);
     }
+    vector<Type> Nrow = log_N.row(y);
+    vector<Type> vpredN = mpredN.row(y);
+    resN.col(y-1) = LinvN*(vector<Type>(Nrow-vpredN));
   }
-
+  ADREPORT(resN);
+  
   //F correlation matrix making, sigmaFgen lives in Fcorr.hpp
   matrix<Type> sigmaF = sigmaFgen(log_F.cols(),corflag,log_std_logF,tRhoF);
-  REPORT(sigmaF);
+  
+  array<Type> resF(log_F.cols(),Y-1);
+  Eigen::LLT< Matrix<Type, Eigen::Dynamic, Eigen::Dynamic> > lltCovF(sigmaF);
+  matrix<Type> LF = lltCovF.matrixL();
+  matrix<Type> LinvF = LF.inverse(); 
+
 
   //Add the F random walk to the likelihood.
   density::MVNORM_t<Type> Fdens(sigmaF);
   for(int y = 1; y < Y;y++){
+    resF.col(y-1) = LinvF*(vector<Type>(log_F.row(y)-log_F.row(y-1)));  
     nll += Fdens(log_F.row(y)-log_F.row(y-1));
   }
+  ADREPORT(resF);
 
   //Expected catch, for making expected catch CRLs
   //Expected landings too
